@@ -10,14 +10,14 @@ __all__ = ["blandaltman"]
 class _BlandAltman(object):
     """Internal class for drawing a Bland-Altman plot"""
 
-    def __init__(self, x, y,
+    def __init__(self, method1, method2,
                  x_title, y_title, graph_title,
                  diff, limit_of_agreement, reference, CI,
                  color_mean, color_loa, color_points):
         # variables assignment
-        self.x: np.array = np.asarray(x)
-        self.y: np.array = np.asarray(y)
-        self.n: float = len(x)
+        self.method1: np.array = np.asarray(method1)
+        self.method2: np.array = np.asarray(method2)
+        self.n: float = len(method1)
         self.diff_method: str = diff
         self.graph_title: str = graph_title
         self.x_title: str = x_title
@@ -33,14 +33,14 @@ class _BlandAltman(object):
         self._check_params()
 
         # perform necessary calculations and processing
-        self.mean: np.array = np.mean([self.x, self.y], axis=0)
+        self.mean: np.array = np.mean([self.method1, self.method1], axis=0)
 
         if diff == 'absolute':
-            self.diff = self.x - self.y
+            self.diff = self.method1 - self.method2
         elif diff == 'percentage':
-            self.diff = ((self.x - self.y) / self.mean) * 100
+            self.diff = ((self.method1 - self.method2) / self.mean) * 100
         else:
-            self.diff = self.x - self.y
+            self.diff = self.method1 - self.method2
 
         self.mean_diff = np.mean(self.diff)
         self.sd_diff = np.std(self.diff, axis=0)
@@ -57,7 +57,7 @@ class _BlandAltman(object):
                              self.mean_diff - self.loa_sd - conf_loa]
 
     def _check_params(self):
-        if len(self.x) != len(self.y):
+        if len(self.method1) != len(self.method2):
             raise ValueError('Length of X and Y are not equal.')
 
         if self.CI is not None and (self.CI > 1 or self.CI < 0):
@@ -113,12 +113,63 @@ class _BlandAltman(object):
             ax.set_title(self.graph_title)
 
 
-def blandaltman(x, y,
+def blandaltman(method1, method2,
                 x_label='Mean of methods', y_label='Difference between methods', title=None,
                 diff='absolute', limit_of_agreement=1.96, reference=False, CI=0.95,
                 color_mean='#008bff', color_loa='#FF7000', color_points='#000000',
                 ax=None):
-    plotter: _BlandAltman = _BlandAltman(x, y, x_label, y_label, title,
+    """Provide a method comparison using Bland-Altman plotting.
+
+    This is an Axis-level function which will draw the Bland-Altman plot
+    onto the current active Axis object unless ``ax`` is provided.
+
+
+    Parameters
+    ----------
+    method1, method2 : array, or list
+        Values obtained from both methods, preferably provided in a np.array.
+    x_label : str, optional
+        The label which is added to the X-axis. If None is provided, a standard
+        label will be added.
+    y_label : str, optional
+        The label which is added to the Y-axis. If None is provided, a standard
+        label will be added.
+    title : str, optional
+        Title of the Bland-Altman plot. If None is provided, no title will be plotted.
+    diff : "absolute"  or "percentage"
+        The difference to display, whether it is an absolute one or a percentual one.
+        If None is provided, it defaults to absolute.
+    limit_of_agreement : float, optional
+        Multiples of the standard deviation to plot the limit of afgreement bounds at.
+        This defaults to 1.96.
+    reference : bool, optional
+        If True, a grey reference line at y=0 will be plotted in the Bland-Altman.
+    CI : float, optional
+        The confidence interval employed in the mean difference and limit of agreement
+        lines. Defaults to 0.95.
+    color_mean : str, optional
+        Color of the mean difference line that will be plotted.
+    color_loa : str, optional
+        Color of the limit of agreement lines that will be plotted.
+    color_points : str, optional
+        Color of the individual differences that will be plotted.
+    ax : matplotlib Axes, optional
+        Axes in which to draw the plot, otherwise use the currently-active
+        Axes.
+
+    Returns
+    -------
+    ax : matplotlib Axes
+        Axes object with the Bland-Altman plot.
+
+    See Also
+    -------
+    Altman, D. G., and Bland, J. M. Series D (The Statistician), vol. 32, no. 3, 1983, pp. 307–317
+    Altman, D. G., and Bland, J. M. Statistical Methods in Medical Research, vol. 8, no. 2, 1999, pp. 135–160.
+
+    """
+
+    plotter: _BlandAltman = _BlandAltman(method1, method2, x_label, y_label, title,
                                          diff, limit_of_agreement, reference, CI,
                                          color_mean, color_loa, color_points)
 
