@@ -31,13 +31,15 @@ class _BlandAltman(object):
 
         # check provided parameters
         self._check_params()
+        self._derive_params()
 
+    def _derive_params(self):
         # perform necessary calculations and processing
         self.mean: np.array = np.mean([self.method1, self.method1], axis=0)
 
-        if diff == 'absolute':
+        if self.diff_method == 'absolute':
             self.diff = self.method1 - self.method2
-        elif diff == 'percentage':
+        elif self.diff_method == 'percentage':
             self.diff = ((self.method1 - self.method2) / self.mean) * 100
         else:
             self.diff = self.method1 - self.method2
@@ -58,7 +60,7 @@ class _BlandAltman(object):
 
     def _check_params(self):
         if len(self.method1) != len(self.method2):
-            raise ValueError('Length of X and Y are not equal.')
+            raise ValueError('Length of method 1 and method 2 are not equal.')
 
         if self.CI is not None and (self.CI > 1 or self.CI < 0):
             raise ValueError('Confidence interval must be between 0 and 1.')
