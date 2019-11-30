@@ -2,8 +2,7 @@ methcomp: method comparison for clinical chemistry
 =======================================
 <div>
 <img src="https://i.ibb.co/qj85D6M/combined.png" width="60%">
-</div> 
---------------------------------------
+</div> <br>
 
 Methcomp is a Python visualization library based 
 and built on matplotlib. It provides a high-level interface for 
