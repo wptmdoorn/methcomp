@@ -1,0 +1,13 @@
+*.pyc
+*.sw*
+build/
+.ipynb_checkpoints/
+dist/
+.cache/
+.coverage
+cover/
+.idea
+.pytest_cache/
+examples/
+
+methcomp/tests/baseline/

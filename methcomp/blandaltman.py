@@ -17,7 +17,6 @@ class _BlandAltman(object):
         # variables assignment
         self.method1: np.array = np.asarray(method1)
         self.method2: np.array = np.asarray(method2)
-        self.n: float = len(method1)
         self.diff_method: str = diff
         self.graph_title: str = graph_title
         self.x_title: str = x_title
@@ -35,6 +34,7 @@ class _BlandAltman(object):
 
     def _derive_params(self):
         # perform necessary calculations and processing
+        self.n: float = len(self.method1)
         self.mean: np.array = np.mean([self.method1, self.method1], axis=0)
 
         if self.diff_method == 'absolute':

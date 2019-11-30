@@ -13,8 +13,8 @@ class _PassingBablok(object):
                  x_label, y_label, title,
                  CI, line_reference, line_CI, legend,
                  color_points, color_paba):
-        self.method1 = method1
-        self.method2 = method2
+        self.method1: np.array = np.asarray(method1)
+        self.method2: np.array = np.asarray(method2)
         self.x_title = x_label
         self.y_title = y_label
         self.graph_title = title
@@ -24,7 +24,6 @@ class _PassingBablok(object):
         self.line_reference = line_reference
         self.line_CI = line_CI
         self.legend = legend
-        self.n = len(method1)
 
         self._check_params()
         self._derive_params()
@@ -34,6 +33,7 @@ class _PassingBablok(object):
             raise ValueError('Length of method 1 and method 2 are not equal.')
 
     def _derive_params(self):
+        self.n = len(self.method1)
         self.sv = []
 
         for i in range(self.n - 1):
