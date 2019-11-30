@@ -22,17 +22,17 @@ of available functions. Methcomp currently provides two functions for method com
 Generate a Bland-Altman plot to compare two sets of measurements of the same value.
 
     passingbablok(method1, method2,
-                      x_label='Method 1', y_label='Method 2', title=None,
-                      CI=0.95, line_reference=True, line_CI=False, legend=True,
-                      color_points='#000000', color_paba='#008bff',
-                      square=False, ax=None):
+                  x_label='Method 1', y_label='Method 2', title=None,
+                  CI=0.95, line_reference=True, line_CI=False, legend=True,
+                  color_points='#000000', color_paba='#008bff',
+                  square=False, ax=None):
                                           
 Generate a Passing-Bablok plot to compare two sets of measurements of the same value.
 
 Dependencies
 ------------
 
-Seaborn supports Python 2.7 and 3.5+.
+Methcomp supports Python 2 and 3.
 Installation requires [numpy](http://www.numpy.org/), 
 [scipy](https://www.scipy.org/), 
 [pandas](https://pandas.pydata.org/), 
