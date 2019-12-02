@@ -1,9 +1,142 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 import scipy.stats as st
 import math
 import numpy as np
 
-__all__ = ["passingbablok"]
+__all__ = ["deming", "passingbablok"]
+
+
+class _Deming(object):
+    """Internal class for drawing a Deming regression plot"""
+
+    def __init__(self, method1, method2,
+                 vr, sdr, bootstrap,
+                 x_label, y_label, title,
+                 line_reference, line_CI, legend,
+                 color_points, color_paba):
+        self.method1: np.array = np.asarray(method1)
+        self.method2: np.array = np.asarray(method2)
+        self.vr = vr
+        self.sdr = sdr
+        self.bootstrap = bootstrap
+        self.x_title = x_label
+        self.y_title = y_label
+        self.graph_title = title
+        self.color_points = color_points
+        self.color_paba = color_paba
+        self.line_reference = line_reference
+        self.line_CI = line_CI
+        self.legend = legend
+
+        self._check_params()
+        self._derive_params()
+
+    def _check_params(self):
+        pass
+
+    def _derive_params(self):
+        def _deming(x, y, lamb):
+            ssdx = np.var(x, ddof=1) * (self.n - 1)
+            ssdy = np.var(y, ddof=1) * (self.n - 1)
+            spdxy = np.cov(x, y)[1][1] * (self.n - 1)
+
+            beta = (ssdy - lamb * ssdx + math.sqrt((ssdy - lamb * ssdx) ** 2 + 4 * lamb * (ssdy ** 2))) / (
+                        2 * spdxy)
+            alpha = y.mean() - beta * x.mean()
+
+            ksi = (lamb * x + beta * (y - alpha)) / (lamb + beta ** 2)
+            sigmax = lamb * sum((x - ksi) ** 2) + sum((y - alpha - beta * ksi) ** 2) / (
+                        (self.n - 2) * beta)
+            sigmay = math.sqrt(lamb * sigmax)
+            sigmax = math.sqrt(sigmax)
+
+            return alpha, beta, sigmax, sigmay
+
+        self.n = len(self.method1)
+        if self.vr is not None:
+            _lambda = self.vr
+        elif self.sdr is not None:
+            _lambda = self.sdr
+        else:
+            _lambda = 1
+
+        params = _deming(self.method1, self.method2, _lambda)
+        print(params)
+
+        if not self.bootstrap:
+            self.alpha = params[0]
+            self.beta = params[1]
+            self.sigmax = params[2]
+            self.sigmay = params[3]
+        else:
+            _params = np.zeros([self.bootstrap, 4])
+
+            for i in range(self.bootstrap):
+                idx = np.random.choice(range(self.n), self.n, replace=True)
+                _params[i] = _deming(np.take(self.method1,idx), np.take(self.method2,idx), _lambda)
+
+            _paramsdf = pd.DataFrame(_params, columns=['alpha','beta','sigmax','sigmay'])
+            se = np.sqrt(np.diag(np.cov(_paramsdf.cov())))
+            t = np.transpose(np.apply_along_axis(np.quantile, 0, _params, [0.5, 0.05/2, 1-0.05/2]))
+
+            self.alpha = [t[0][0], se[0], t[0][1], t[0][2]]
+            self.beta = [t[1][0], se[1], t[0][1], t[0][2]]
+            self.sigmax = [t[2][0], se[2], t[0][1], t[0][2]]
+            self.sigmay = [t[3][0], se[3], t[0][1], t[0][2]]
+
+    def plot(self, ax):
+        # plot individual points
+        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points)
+
+        # plot reference line
+        if self.line_reference:
+            ax.plot([0, 1], [0, 1], label='Reference',
+                    color='grey', linestyle='--', transform=ax.transAxes)
+
+        # plot Deming-line
+        _xvals = np.array(ax.get_xlim())
+        _yvals = [self.alpha[s] + self.beta[0] * _xvals for s in range(0, 4)]
+        ax.plot(_xvals, _yvals[0], label=f'{self.alpha[0]:.2f} + {self.beta[0]:.2f} * Method 1',
+                color=self.color_paba, linestyle='-')
+        ax.fill_between(_xvals, _yvals[2], _yvals[3], color=self.color_paba, alpha=0.2)
+        if self.line_CI:
+            ax.plot(_xvals, _yvals[2], linestyle='--')
+            ax.plot(_xvals, _yvals[3], linestyle='--')
+
+        if self.legend:
+            ax.legend(loc='upper left', frameon=False)
+
+        ax.set_ylabel(self.y_title)
+        ax.set_xlabel(self.x_title)
+        if self.graph_title is not None:
+            ax.set_title(self.graph_title)
+
+def deming(method1, method2,
+           vr=None, sdr=None, bootstrap=1000,
+           x_label='Method 1', y_label='Method 2', title=None,
+           line_reference=True, line_CI=False, legend=True,
+           color_points='#000000', color_paba='#008bff',
+           square=False, ax=None):
+
+    plotter: _Deming = _Deming(method1, method2,
+                              vr, sdr, bootstrap,
+                              x_label, y_label, title,
+                              line_reference, line_CI, legend,
+                              color_points, color_paba)
+
+    # Draw the plot and return the Axes
+    if ax is None:
+        ax = plt.gca()
+
+    if square:
+        ax.set_aspect('equal')
+
+    plotter.plot(ax)
+
+    return ax
+
+
 
 
 class _PassingBablok(object):
