@@ -9,28 +9,26 @@ method2 = [1.03, 2.05, 2.79, 3.67,
            13.47, 13.83, 15.15, 16.12,
            16.94, 18.09, 19.13, 19.54]
 
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic():
     fig, ax = plt.subplots(1,1)
     blandaltman(method1, method2, ax=ax)
     return fig
 
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic_title():
     fig, ax = plt.subplots(1,1)
     blandaltman(method1, method2, title='Test', ax=ax)
     return fig
 
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic_without_CI():
     fig, ax = plt.subplots(1,1)
     blandaltman(method1, method2, CI=None, ax=ax)
     return fig
 
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic_percentage():
     fig, ax = plt.subplots(1,1)
     blandaltman(method1, method2, diff='percentage', ax=ax)
     return fig
-
-

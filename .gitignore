@@ -8,6 +8,5 @@ dist/
 cover/
 .idea
 .pytest_cache/
-examples/
 
 methcomp/tests/baseline/

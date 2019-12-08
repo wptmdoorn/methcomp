@@ -13,6 +13,7 @@ class _BlandAltman(object):
     def __init__(self, method1, method2,
                  x_title, y_title, graph_title,
                  diff, limit_of_agreement, reference, CI,
+                 xlim, ylim,
                  color_mean, color_loa, color_points):
         # variables assignment
         self.method1: np.array = np.asarray(method1)
@@ -24,6 +25,8 @@ class _BlandAltman(object):
         self.loa: float = limit_of_agreement
         self.reference: bool = reference
         self.CI: float = CI
+        self.xlim: list = xlim
+        self.ylim: list = ylim
         self.color_mean: str = color_mean
         self.color_loa: str = color_loa
         self.color_points: str = color_points
@@ -81,7 +84,7 @@ class _BlandAltman(object):
         ax.axhline(self.mean_diff - self.loa_sd, color=self.color_loa, linestyle='--')
 
         if self.reference:
-            ax.axhline(0, color='grey', linestyle='-')
+            ax.axhline(0, color='grey', linestyle='-', alpha=0.4)
 
         # confidence intervals (if requested)
         if self.CI is not None:
@@ -108,6 +111,12 @@ class _BlandAltman(object):
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
 
+        # set X and Y limits
+        if self.xlim is not None:
+            ax.set_xlim(self.xlim[0], self.xlim[1])
+        if self.ylim is not None:
+            ax.set_ylim(self.ylim[0], self.ylim[1])
+
         # graph labels
         ax.set_ylabel(self.y_title)
         ax.set_xlabel(self.x_title)
@@ -118,6 +127,7 @@ class _BlandAltman(object):
 def blandaltman(method1, method2,
                 x_label='Mean of methods', y_label='Difference between methods', title=None,
                 diff='absolute', limit_of_agreement=1.96, reference=False, CI=0.95,
+                xlim=None, ylim=None,
                 color_mean='#008bff', color_loa='#FF7000', color_points='#000000',
                 ax=None):
     """Provide a method comparison using Bland-Altman plotting.
@@ -149,6 +159,12 @@ def blandaltman(method1, method2,
     CI : float, optional
         The confidence interval employed in the mean difference and limit of agreement
         lines. Defaults to 0.95.
+    xlim : list, optional
+        Minimum and maximum limits for X-axis. Should be provided as list or tuple.
+        If not set, matplotlib will decide its own bounds.
+    ylim : list, optional
+        Minimum and maximum limits for Y-axis. Should be provided as list or tuple.
+        If not set, matplotlib will decide its own bounds.
     color_mean : str, optional
         Color of the mean difference line that will be plotted.
     color_loa : str, optional
@@ -174,6 +190,7 @@ def blandaltman(method1, method2,
 
     plotter: _BlandAltman = _BlandAltman(method1, method2, x_label, y_label, title,
                                          diff, limit_of_agreement, reference, CI,
+                                         xlim, ylim,
                                          color_mean, color_loa, color_points)
 
     # Draw the plot and return the Axes

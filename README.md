@@ -9,7 +9,7 @@ and built on matplotlib. It provides a high-level interface for
 method comparison for clinical chemisty methods, amongst others.
 
 Documentation
--------------
+------------- 
 Online documentation is currently only available through the docstrings
 of available functions. Methcomp currently provides two functions for method comparison.
 
