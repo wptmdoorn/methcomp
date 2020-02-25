@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from shapely.geometry import Polygon, Point
 
-__all__ = ["clarke", "parkes"]
+__all__ = ["clarke", "parkes", "clarkezones", "parkeszones"]
 
 
 class _Clarke(object):
@@ -88,7 +88,7 @@ class _Clarke(object):
         zone_a = (are <= 20) | ((ref < 70 / n) & (pred < 70 / n))
         _zones[zone_a] = 0
 
-        return _zones
+        return [int(i) for i in _zones]
 
     def plot(self, ax):
         _gridlines = [
@@ -107,16 +107,18 @@ class _Clarke(object):
             ([130, 180], [0, 70], '-')
         ]
 
+        colors = ['#196600', '#E5FF00', '#FF7B00', '#FF5700', '#FF0000']
+
         _gridlabels = [
-            (30, 15, "A"),
-            (370, 260, "B"),
-            (280, 370, "B"),
-            (160, 370, "C"),
-            (160, 15, "C"),
-            (30, 140, "D"),
-            (370, 120, "D"),
-            (30, 370, "E"),
-            (370, 15, "E"),
+            (30, 15, "A", colors[0]),
+            (370, 260, "B", colors[1]),
+            (280, 370, "B", colors[1]),
+            (160, 370, "C", colors[2]),
+            (160, 15, "C", colors[2]),
+            (30, 140, "D", colors[3]),
+            (370, 120, "D", colors[3]),
+            (30, 370, "E", colors[4]),
+            (370, 15, "E", colors[4]),
         ]
 
         # calculate conversion factor if needed
@@ -125,7 +127,7 @@ class _Clarke(object):
         # plot individual points
         if self.color_points == 'auto':
             ax.scatter(self.reference,
-                       self.test, marker='o', c=self._calc_error_zone(), s=8)
+                       self.test, marker='o', c=[colors[i] for i in self._calc_error_zone()], s=8)
         else:
             ax.scatter(self.reference,
                        self.test, marker='o', color=self.color_points, s=8)
@@ -137,7 +139,7 @@ class _Clarke(object):
                     g[2], color=self.color_grid)
 
         for l in _gridlabels:
-            ax.text(l[0]/n, l[1]/n, l[2], fontsize=15)
+            ax.text(l[0]/n, l[1]/n, l[2], fontsize=15, color=l[3])
 
         # limits and ticks
         ax.set_xlim(self.xlim[0]/n, self.xlim[1]/n)
@@ -149,10 +151,10 @@ class _Clarke(object):
         if self.graph_title is not None:
             ax.set_title(self.graph_title)
 
-def clarke(reference, test, units='mmol',
+def clarke(reference, test, units,
            x_label=None, y_label=None, title=None,
            xlim=None, ylim=None,
-           color_grid='#000000', color_points='#FF0000',
+           color_grid='#000000', color_points='auto',
            square=False, ax=None):
     """Provide a glucose error grid analyses as designed by Clarke.
 
@@ -173,7 +175,7 @@ def clarke(reference, test, units='mmol',
         The label which is added to the Y-axis. If None is provided, a standard
         label will be added.
     title : str, optional
-        Title of the Bland-Altman plot. If None is provided, no title will be plotted.
+        Title of the Clarke error grid plot. If None is provided, no title will be plotted.
     xlim : list, optional
         Minimum and maximum limits for X-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
@@ -185,6 +187,8 @@ def clarke(reference, test, units='mmol',
     color_points : str, optional
         Color of the individual differences that will be plotted. If set to 'auto',
         it will plot the points according to their zones.
+    square : bool, optional
+        If True, set the Axes aspect to "equal" so each cell will be square-shaped.
     ax : matplotlib Axes, optional
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
@@ -192,7 +196,7 @@ def clarke(reference, test, units='mmol',
     Returns
     -------
     ax : matplotlib Axes
-        Axes object with the Bland-Altman plot.
+        Axes object with the Clarke-error grid plot.
 
     See Also
     -------
@@ -215,9 +219,44 @@ def clarke(reference, test, units='mmol',
 
     return ax
 
+def clarkezones(reference, test, units,
+                numeric=False):
+    """Provides the error zones as depicted by the
+    Clarke error grid analysis for each point in the reference and test datasets.
+
+
+    Parameters
+    ----------
+    reference, test : array, or list
+        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+    units : str
+        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+    numeric : bool, optional
+        If this is set to true, returns integers (0 to 4) instead of characters for each of the
+        zones.
+
+    Returns
+    -------
+    clarkezones : list
+        Returns a list depecting the zones for each of the reference and test values.
+
+    """
+
+    # obtain zones from a Clarke reference object
+    _zones = _Clarke(reference, test, units,
+                     None, None, None,
+                     None, None,
+                     '#000000', 'auto')._calc_error_zone()
+
+    if numeric:
+        return _zones
+    else:
+        labels = ['A', 'B', 'C', 'D', 'E']
+        return [labels[i] for i in _zones]
+
 
 class _Parkes(object):
-    """Internal class for drawing a Deming regression plot"""
+    """Internal class for drawing a Parkes consensus error grid plot"""
 
     def __init__(self, type, reference, test, units,
                  x_title, y_title, graph_title,
@@ -240,6 +279,9 @@ class _Parkes(object):
         self._derive_params()
 
     def _check_params(self):
+        if self.type != 1 and self.type != 2:
+            raise ValueError('Type of Diabetes should either be 1 or 2.')
+
         if len(self.reference) != len(self.test):
             raise ValueError('Length of reference and test values are not equal')
 
@@ -509,19 +551,22 @@ class _Parkes(object):
             ax.set_title(self.graph_title)
 
 
-def parkes(type, reference, test, units='mmol',
+def parkes(type, reference, test, units,
            x_label=None, y_label=None, title=None,
            xlim=None, ylim=None,
            color_grid='#000000', color_points='auto',
            square=False, ax=None):
-    """Provide a glucose error grid analyses as designed by Clarke.
+    """Provide a glucose error grid analyses as designed by Parkes.
 
-    This is an Axis-level function which will draw the Clarke-error grid plot.
+    This is an Axis-level function which will draw the Parke-error grid plot.
     onto the current active Axis object unless ``ax`` is provided.
 
 
     Parameters
     ----------
+    type : int
+        Parkes error grid differ for each type of diabetes. This should be either 1 or 2 corresponding
+        to the type of diabetes.
     reference, test : array, or list
         Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
     units : str
@@ -533,7 +578,7 @@ def parkes(type, reference, test, units='mmol',
         The label which is added to the Y-axis. If None is provided, a standard
         label will be added.
     title : str, optional
-        Title of the Bland-Altman plot. If None is provided, no title will be plotted.
+        Title of the Parkes-error grid plot. If None is provided, no title will be plotted.
     xlim : list, optional
         Minimum and maximum limits for X-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
@@ -541,10 +586,12 @@ def parkes(type, reference, test, units='mmol',
         Minimum and maximum limits for Y-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
     color_grid : str, optional
-        Color of the Clarke error grid lines.
+        Color of the Clarke error grid lines. Defaults to #000000 which represents the black color.
     color_points : str, optional
         Color of the individual differences that will be plotted. Defaults to 'auto' which colors
         the points according to their relative zones.
+    square : bool, optional
+        If True, set the Axes aspect to "equal" so each cell will be square-shaped.
     ax : matplotlib Axes, optional
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
@@ -552,11 +599,12 @@ def parkes(type, reference, test, units='mmol',
     Returns
     -------
     ax : matplotlib Axes
-        Axes object with the Bland-Altman plot.
+        Axes object with the Parkes error grid plot.
 
     See Also
     -------
-    Clarke, W. L., Cox, D., et al. Diabetes Care, vol. 10, no. 5, 1987, pp. 622–628.
+    Parkes, J. L., Slatin S. L. et al. Diabetes Care, vol. 23, no. 8, 2000, pp. 1143-1148.
+    Pfutzner, A., Klonoff D. C., et al. J Diabetes Sci Technol, vol. 7, no. 5, 2013, pp. 1275-1281.
     """
 
     plotter: _Parkes = _Parkes(type, reference, test, units,
@@ -574,3 +622,41 @@ def parkes(type, reference, test, units='mmol',
     plotter.plot(ax)
 
     return ax
+
+def parkeszones(type, reference, test, units,
+                numeric=False):
+    """Provides the error zones as depicted by the
+    Parkes error grid analysis for each point in the reference and test datasets.
+
+
+    Parameters
+    ----------
+    type : int
+        Parkes error grid differ for each type of diabetes. This should be either 1 or 2 corresponding
+        to the type of diabetes.
+    reference, test : array, or list
+        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+    units : str
+        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+    numeric : bool, optional
+        If this is set to true, returns integers (0 to 4) instead of characters for each of the
+        zones.
+
+    Returns
+    -------
+    clarkezones : list
+        Returns a list depecting the zones for each of the reference and test values.
+
+    """
+
+    # obtain zones from a Clarke reference object
+    _zones = _Parkes(type, reference, test, units,
+                     None, None, None,
+                     None, None,
+                     '#000000', 'auto')._calc_error_zone()
+
+    if numeric:
+        return _zones
+    else:
+        labels = ['A', 'B', 'C', 'D', 'E']
+        return [labels[i] for i in _zones]
