@@ -133,13 +133,17 @@ class _Clarke(object):
                        self.test, marker='o', color=self.color_points, s=8)
 
         # plot grid lines
-        for g in _gridlines:
-            ax.plot(np.array(g[0])/n,
-                    np.array(g[1])/n,
-                    g[2], color=self.color_grid)
+        if self.grid:
+            for g in _gridlines:
+                ax.plot(np.array(g[0])/n,
+                        np.array(g[1])/n,
+                        g[2], color=self.color_grid)
 
-        for l in _gridlabels:
-            ax.text(l[0]/n, l[1]/n, l[2], fontsize=15, color=l[3])
+            for l in _gridlabels:
+                ax.text(l[0] / n, l[1] / n, l[2],
+                        fontsize=15,
+                        fontweight='bold',
+                        color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
 
         # limits and ticks
         ax.set_xlim(self.xlim[0]/n, self.xlim[1]/n)
@@ -154,7 +158,8 @@ class _Clarke(object):
 def clarke(reference, test, units,
            x_label=None, y_label=None, title=None,
            xlim=None, ylim=None,
-           color_grid='#000000', color_points='auto',
+           color_grid='#000000', color_gridlabels='auto', color_points='auto',
+           grid=True, percentage=False,
            square=False, ax=None):
     """Provide a glucose error grid analyses as designed by Clarke.
 
@@ -184,9 +189,16 @@ def clarke(reference, test, units,
         If not set, matplotlib will decide its own bounds.
     color_grid : str, optional
         Color of the Clarke error grid lines.
+    color_gridlabels : str, optional
+        Color of the gridlabels (A, B, C, ..) that will be plotted. If set to 'auto',
+        it will plot the points according to their zones.
     color_points : str, optional
         Color of the individual differences that will be plotted. If set to 'auto',
         it will plot the points according to their zones.
+    grid : bool, optional
+        Enable the grid lines of the Parkes error. Defaults to True.
+    percentage : bool, optional
+        If True, percentage of the zones will be depicted in the plot.
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be square-shaped.
     ax : matplotlib Axes, optional
@@ -246,7 +258,8 @@ def clarkezones(reference, test, units,
     _zones = _Clarke(reference, test, units,
                      None, None, None,
                      None, None,
-                     '#000000', 'auto')._calc_error_zone()
+                     True, False,
+                     '#000000', 'auto', 'auto')._calc_error_zone()
 
     if numeric:
         return _zones
@@ -261,7 +274,8 @@ class _Parkes(object):
     def __init__(self, type, reference, test, units,
                  x_title, y_title, graph_title,
                  xlim, ylim,
-                 color_grid, color_points):
+                 color_grid, color_gridlabels, color_points,
+                 grid, percentage):
         # variables assignment
         self.type: int = type
         self.reference: np.array = np.asarray(reference)
@@ -273,7 +287,10 @@ class _Parkes(object):
         self.xlim: list = xlim
         self.ylim: list = ylim
         self.color_grid: str = color_grid
+        self.color_gridlabels: str = color_gridlabels
         self.color_points: str = color_points
+        self.grid: bool = grid
+        self.percentage: bool = percentage
 
         self._check_params()
         self._derive_params()
@@ -508,7 +525,7 @@ class _Parkes(object):
         colors = ['#196600', '#E5FF00', '#FF7B00', '#FF5700', '#FF0000']
 
         _gridlabels = [
-            (320, 320, "A", colors[0]),
+            (350, 350, "A", colors[0]),
             (220, 360, "B", colors[1]),
             (385, 235, "B", colors[1]),
             (140, 375, "C", colors[2]),
@@ -527,13 +544,17 @@ class _Parkes(object):
                         self.test, marker='o', color=self.color_points, s=8)
 
         # plot grid lines
-        for g in _gridlines:
-            ax.plot(np.array(g[0]),
-                    np.array(g[1]),
-                    g[2], color=self.color_grid)
+        if self.grid:
+            for g in _gridlines:
+                ax.plot(np.array(g[0]),
+                        np.array(g[1]),
+                        g[2], color=self.color_grid)
 
-        for l in _gridlabels:
-            ax.text(l[0] / n, l[1] / n, l[2], fontsize=15, color=l[3])
+            for l in _gridlabels:
+                ax.text(l[0] / n, l[1] / n, l[2],
+                        fontsize=15,
+                        fontweight='bold',
+                        color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
 
         # limits and ticks
         _ticks = [70, 100, 150, 180, 240, 300, 350, 400, 450, 500,
@@ -554,7 +575,8 @@ class _Parkes(object):
 def parkes(type, reference, test, units,
            x_label=None, y_label=None, title=None,
            xlim=None, ylim=None,
-           color_grid='#000000', color_points='auto',
+           color_grid='#000000', color_gridlabels='auto', color_points='auto',
+           grid=True, percentage=False,
            square=False, ax=None):
     """Provide a glucose error grid analyses as designed by Parkes.
 
@@ -587,9 +609,16 @@ def parkes(type, reference, test, units,
         If not set, matplotlib will decide its own bounds.
     color_grid : str, optional
         Color of the Clarke error grid lines. Defaults to #000000 which represents the black color.
+    color_gridlabels : str, optional
+        Color of the grid labels (A, B, C, ..) that will be plotted. Defaults to 'auto' which colors
+        the points according to their relative zones.
     color_points : str, optional
         Color of the individual differences that will be plotted. Defaults to 'auto' which colors
         the points according to their relative zones.
+    grid : bool, optional
+        Enable the grid lines of the Parkes error. Defaults to True.
+    percentage : bool, optional
+        If True, percentage of the zones will be depicted in the plot.
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be square-shaped.
     ax : matplotlib Axes, optional
@@ -610,7 +639,8 @@ def parkes(type, reference, test, units,
     plotter: _Parkes = _Parkes(type, reference, test, units,
                                x_label, y_label, title,
                                xlim, ylim,
-                               color_grid, color_points)
+                               color_grid, color_gridlabels, color_points,
+                               grid, percentage)
 
     # Draw the plot and return the Axes
     if ax is None:
@@ -653,7 +683,8 @@ def parkeszones(type, reference, test, units,
     _zones = _Parkes(type, reference, test, units,
                      None, None, None,
                      None, None,
-                     '#000000', 'auto')._calc_error_zone()
+                     True, False,
+                     '#000000', 'auto', 'auto')._calc_error_zone()
 
     if numeric:
         return _zones
