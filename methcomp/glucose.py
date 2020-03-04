@@ -11,7 +11,8 @@ class _Clarke(object):
     def __init__(self, reference, test, units,
                  x_title, y_title, graph_title,
                  xlim, ylim,
-                 color_grid, color_points):
+                 color_grid, color_gridlabels, color_points,
+                 grid, percentage):
         # variables assignment
         self.reference: np.array = np.asarray(reference)
         self.test: np.array = np.asarray(test)
@@ -22,7 +23,10 @@ class _Clarke(object):
         self.xlim: list = xlim
         self.ylim: list = ylim
         self.color_grid: str = color_grid
+        self.color_gridlabels: str = color_gridlabels
         self.color_points: str = color_points
+        self.grid: bool = grid
+        self.percentage: bool = percentage
 
         self._check_params()
         self._derive_params()
@@ -107,7 +111,7 @@ class _Clarke(object):
             ([130, 180], [0, 70], '-')
         ]
 
-        colors = ['#196600', '#E5FF00', '#FF7B00', '#FF5700', '#FF0000']
+        colors = ['#196600', '#7FFF00', '#FF7B00', '#FF5700', '#FF0000']
 
         _gridlabels = [
             (30, 15, "A", colors[0]),
@@ -127,10 +131,16 @@ class _Clarke(object):
         # plot individual points
         if self.color_points == 'auto':
             ax.scatter(self.reference,
-                       self.test, marker='o', c=[colors[i] for i in self._calc_error_zone()], s=8)
+                       self.test,
+                       marker='o',
+                       alpha=0.6,
+                       c=[colors[i] for i in self._calc_error_zone()], s=8)
         else:
             ax.scatter(self.reference,
-                       self.test, marker='o', color=self.color_points, s=8)
+                       self.test, marker='o',
+                       color=self.color_points,
+                       alpha=0.6,
+                       s=8)
 
         # plot grid lines
         if self.grid:
@@ -139,11 +149,27 @@ class _Clarke(object):
                         np.array(g[1])/n,
                         g[2], color=self.color_grid)
 
-            for l in _gridlabels:
-                ax.text(l[0] / n, l[1] / n, l[2],
-                        fontsize=15,
-                        fontweight='bold',
-                        color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
+            if self.percentage:
+                zones = [['A', 'B', 'C', 'D', 'E'][i] for i in self._calc_error_zone()]
+
+                for l in _gridlabels:
+                    ax.text(l[0] / n, l[1] / n, l[2],
+                            fontsize=12,
+                            fontweight='bold',
+                            color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
+                    ax.text(l[0] / n + (8 / n),
+                            l[1] / n + (8 / n),
+                            "{:.1f}".format((zones.count(l[2]) / len(zones)) * 100),
+                            fontsize=9,
+                            fontweight='bold',
+                            color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
+
+            else:
+                for l in _gridlabels:
+                    ax.text(l[0] / n, l[1] / n, l[2],
+                            fontsize=12,
+                            fontweight='bold',
+                            color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
 
         # limits and ticks
         ax.set_xlim(self.xlim[0]/n, self.xlim[1]/n)
@@ -218,7 +244,8 @@ def clarke(reference, test, units,
     plotter: _Clarke = _Clarke(reference, test, units,
                                x_label, y_label, title,
                                xlim, ylim,
-                               color_grid, color_points)
+                               color_grid, color_gridlabels, color_points,
+                               grid, percentage)
 
     # Draw the plot and return the Axes
     if ax is None:
@@ -258,8 +285,8 @@ def clarkezones(reference, test, units,
     _zones = _Clarke(reference, test, units,
                      None, None, None,
                      None, None,
-                     True, False,
-                     '#000000', 'auto', 'auto')._calc_error_zone()
+                     '#000000', 'auto', 'auto',
+                     True, False)._calc_error_zone()
 
     if numeric:
         return _zones
@@ -522,26 +549,33 @@ class _Parkes(object):
                 ([35/n, self._endx(35/n, 200/n, maxY, ce)], [200/n, maxY], '-'),
             ]
 
-        colors = ['#196600', '#E5FF00', '#FF7B00', '#FF5700', '#FF0000']
+        colors = ['#196600', '#7FFF00', '#FF7B00', '#FF5700', '#FF0000']
 
         _gridlabels = [
-            (350, 350, "A", colors[0]),
-            (220, 360, "B", colors[1]),
-            (385, 235, "B", colors[1]),
-            (140, 375, "C", colors[2]),
-            (405, 145, "C", colors[2]),
-            (415, 50, "D",  colors[3]),
-            (75, 383, "D",  colors[3]),
-            (21, 383, "E",  colors[4])
+            (600, 600, "A", colors[0]),
+            (360, 600, "B", colors[1]),
+            (600, 355, "B", colors[1]),
+            (165, 600, "C", colors[2]),
+            (600, 215, "C", colors[2]),
+            (600, 50, "D", colors[3]),
+            (75, 600, "D", colors[3]),
+            (5, 600, "E", colors[4])
         ]
+
 
         # plot individual points
         if self.color_points == 'auto':
             ax.scatter(self.reference,
-                        self.test, marker='o', c=[colors[i] for i in self._calc_error_zone()], s=8)
+                       self.test,
+                       marker='o',
+                       alpha=0.6,
+                       c=[colors[i] for i in self._calc_error_zone()], s=8)
         else:
             ax.scatter(self.reference,
-                        self.test, marker='o', color=self.color_points, s=8)
+                       self.test, marker='o',
+                       color=self.color_points,
+                       alpha=0.6,
+                       s=8)
 
         # plot grid lines
         if self.grid:
@@ -550,11 +584,27 @@ class _Parkes(object):
                         np.array(g[1]),
                         g[2], color=self.color_grid)
 
-            for l in _gridlabels:
-                ax.text(l[0] / n, l[1] / n, l[2],
-                        fontsize=15,
-                        fontweight='bold',
-                        color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
+            if self.percentage:
+                zones = [['A', 'B', 'C', 'D', 'E'][i] for i in self._calc_error_zone()]
+
+                for l in _gridlabels:
+                    ax.text(l[0] / n, l[1] / n, l[2],
+                            fontsize=12,
+                            fontweight='bold',
+                            color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
+                    ax.text(l[0] / n + (18 / n),
+                            l[1] / n + (18 / n),
+                            "{:.1f}".format((zones.count(l[2])/len(zones))*100),
+                            fontsize=9,
+                            fontweight='bold',
+                            color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
+
+            else:
+                for l in _gridlabels:
+                    ax.text(l[0] / n, l[1] / n, l[2],
+                            fontsize=12,
+                            fontweight='bold',
+                            color=l[3] if self.color_gridlabels == 'auto' else self.color_gridlabels)
 
         # limits and ticks
         _ticks = [70, 100, 150, 180, 240, 300, 350, 400, 450, 500,
