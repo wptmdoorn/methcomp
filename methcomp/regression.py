@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.stats as st
+import statsmodels.api as sm
 import math
 import numpy as np
-from collections import Iterable
 
-__all__ = ["deming", "passingbablok"]
+__all__ = ["deming", "passingbablok", "linear"]
 
 
 class _Deming(object):
@@ -361,6 +361,147 @@ def passingbablok(method1, method2,
                                              x_label, y_label, title,
                                              CI, line_reference, line_CI, legend,
                                              color_points, color_paba)
+
+    # Draw the plot and return the Axes
+    if ax is None:
+        ax = plt.gca()
+
+    if square:
+        ax.set_aspect('equal')
+
+    plotter.plot(ax)
+
+    return ax
+
+class _Linear(object):
+    """Internal class for drawing a simple, linear regression plot"""
+
+    def __init__(self, method1, method2,
+                 x_label, y_label, title,
+                 CI, line_reference, line_CI, legend,
+                 color_points, color_paba):
+        self.method1: np.array = np.asarray(method1)
+        self.method2: np.array = np.asarray(method2)
+        self.x_title = x_label
+        self.y_title = y_label
+        self.graph_title = title
+        self.CI = CI
+        self.color_points = color_points
+        self.color_paba = color_paba
+        self.line_reference = line_reference
+        self.line_CI = line_CI
+        self.legend = legend
+
+        self._check_params()
+        self._derive_params()
+
+    def _check_params(self):
+        if len(self.method1) != len(self.method2):
+            raise ValueError('Length of method 1 and method 2 are not equal.')
+        if self.CI is not None and (self.CI > 1 or self.CI < 0):
+            raise ValueError('Confidence interval must be between 0 and 1.')
+        if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
+            raise ValueError('Axes labels arguments should be provided as a str.')
+
+    def _derive_params(self):
+        self.n = len(self.method1)
+        _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
+        _params = _model.params
+        _confint = _model.conf_int(alpha=self.CI)
+
+        self.intercept = [_confint[0][0], _params[0], _confint[0][1]]
+        self.slope = [_confint[1][0], _params[1], _confint[1][1]]
+
+    def plot(self, ax):
+        # plot individual points
+        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points)
+
+        # plot reference line
+        if self.line_reference:
+            ax.plot([0, 1], [0, 1], label='Reference',
+                    color='grey', linestyle='--', transform=ax.transAxes)
+
+        # plot linear regression
+        _xvals = np.array(ax.get_xlim())
+        _yvals = [self.intercept[s] + self.slope[s] * _xvals for s in range(0, 3)]
+        ax.plot(_xvals, _yvals[0], label=f'{self.intercept[0]:.2f} + {self.slope[0]:.2f} * Method 1',
+                color=self.color_paba, linestyle='-')
+        ax.fill_between(_xvals, _yvals[1], _yvals[2], color=self.color_paba, alpha=0.2)
+        if self.line_CI:
+            ax.plot(_xvals, _yvals[1], linestyle='--')
+            ax.plot(_xvals, _yvals[2], linestyle='--')
+
+        if self.legend:
+            ax.legend(loc='upper left', frameon=False)
+
+        ax.set_ylabel(self.y_title)
+        ax.set_xlabel(self.x_title)
+        if self.graph_title is not None:
+            ax.set_title(self.graph_title)
+
+
+def linear(method1, method2,
+           x_label='Method 1', y_label='Method 2', title=None,
+           CI=0.95, line_reference=True, line_CI=False, legend=True,
+           color_points='#000000', color_paba='#008bff',
+           square=False, ax=None):
+    """Provide a method comparison using simple, linear regression.
+
+    This is an Axis-level function which will draw the linear regression plot
+    onto the current active Axis object unless ``ax`` is provided.
+
+
+    Parameters
+    ----------
+    method1, method2 : array, or list
+        Values obtained from both methods, preferably provided in a np.array.
+    x_label : str, optional
+        The label which is added to the X-axis. If None is provided, a standard
+        label will be added.
+    y_label : str, optional
+        The label which is added to the Y-axis. If None is provided, a standard
+        label will be added.
+    title : str, optional
+        Title of the linear regression plot. If None is provided, no title will be plotted.
+    CI : float, optional
+        The confidence interval employed in the mean difference and limit of agreement
+        lines. Defaults to 0.95.
+    line_reference : bool, optional
+        If True, a grey reference line at y=x will be plotted in the plot.
+        Defaults to true.
+    line_CI : bool, optional
+        If True, dashed lines will be plotted at the boundaries of the confidence intervals.
+        Defaults to false.
+    legend : bool, optional
+        If True, will provide a legend containing the computed Linear regression equation.
+        Defaults to true.
+    color_points : str, optional
+        Color of the individual differences that will be plotted.
+        Color should be provided in format compatible with matplotlib.
+    color_paba : str, optional
+        Color of the mean difference line that will be plotted.
+        Color should be provided in format compatible with matplotlib.
+    square : bool, optional
+        If True, set the Axes aspect to "equal" so each cell will be
+        square-shaped.
+    ax : matplotlib Axes, optional
+        Axes in which to draw the plot, otherwise use the currently-active
+        Axes.
+
+    Returns
+    -------
+    ax : matplotlib Axes
+        Axes object with the Bland-Altman plot.
+
+    See Also
+    -------
+    ..............
+    """
+
+    plotter: _Linear = _Linear(method1, method2,
+                               x_label, y_label, title,
+                               CI, line_reference, line_CI, legend,
+                               color_points, color_paba)
 
     # Draw the plot and return the Axes
     if ax is None:
