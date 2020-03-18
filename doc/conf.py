@@ -22,7 +22,8 @@ import sys
 sys.path.append(os.path.abspath('../'))
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('../..'))
-print(os.path)
+sys.path.append("/home/personalpc/Development/methcomp/venv/lib/python3.6/site-packages/")
+
 
 # -- General configuration ------------------------------------------------
 

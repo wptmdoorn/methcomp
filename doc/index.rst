@@ -7,6 +7,9 @@ Welcome to methcomp's documentation!
 .. automodule:: methcomp.blandaltman
    :members:
 
+.. automodule:: methcomp.glucose
+   :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
