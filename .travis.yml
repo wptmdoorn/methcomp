@@ -8,5 +8,5 @@ install:
   - pip install -U pytest
   - pip install -U pytest-mpl
 script:
-  - pytest methcomp --mpl-generate-path=baseline
+  - pytest methcomp --mpl-generate-path=methcomp/tests/baseline
   - pytest methcomp --mpl
