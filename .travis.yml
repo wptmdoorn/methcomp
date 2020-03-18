@@ -7,6 +7,10 @@ install:
   - pip install -r requirements.txt
   - pip install -U pytest
   - pip install -U pytest-mpl
+  - pip install -U pytest-cov codecov
 script:
   - pytest methcomp --mpl-generate-path=methcomp/tests/baseline
   - pytest methcomp --mpl
+  - pytest --cov-report=xml --cov=methcomp methcomp/tests/
+after_succes:
+  - codecov
