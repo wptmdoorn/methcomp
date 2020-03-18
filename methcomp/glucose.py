@@ -344,9 +344,6 @@ class _Parkes(object):
             _unit = 'mmol/L' if 'mmol' else 'mg/dL'
             self.y_title = 'Predicted glucose concentration ({})'.format(_unit)
 
-        self.xlim = self.xlim or [0, 400]
-        self.ylim = self.ylim or [0, 400]
-
     def _coef(self, x, y, xend, yend):
         if xend == x:
             raise ValueError('Vertical line - function inapplicable')
@@ -471,8 +468,8 @@ class _Parkes(object):
         # calculate conversion factor if needed
         n = 18 if self.units == 'mmol' else 1
 
-        maxX = max(max(ref) + 20 / n, 550 / n)
-        maxY = max([*(np.array(pred) + 20 / n), maxX, 550 / n])
+        maxX = self.xlim or max(max(ref) + 20 / n, 550 / n)
+        maxY = self.ylim or max([*(np.array(pred) + 20 / n), maxX, 550 / n])
 
         if self.type == 1:
             ce =  self._coef(35, 155, 50, 550)

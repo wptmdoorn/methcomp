@@ -149,7 +149,7 @@ def deming(method1, method2,
     sdr : float
         The assumed known standard deviations. Parameter vr takes precedence if both are given.
         Defaults to 1.
-    bootstrap : int
+    bootstrap : int or None
         Amount of bootstrap estimates that should be performed to acquire standard errors (and confidence
         intervals). If None, no bootstrapping is performed. Defaults to 1000.
     x_label : str, optional

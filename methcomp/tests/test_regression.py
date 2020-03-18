@@ -1,4 +1,4 @@
-from methcomp import passingbablok, deming
+from methcomp import passingbablok, deming, linear
 import matplotlib.pyplot as plt
 import pytest
 
@@ -9,52 +9,93 @@ method2 = [1.03, 2.05, 2.79, 3.67,
            13.47, 13.83, 15.15, 16.12,
            16.94, 18.09, 19.13, 19.54]
 
+
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_passing_bablok_basic():
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     passingbablok(method1, method2, ax=ax)
     return fig
 
+
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_passing_bablok_basic_title():
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     passingbablok(method1, method2, title='Test', ax=ax)
     return fig
 
+
 @pytest.mark.mpl_image_compare(tolerance=10)
-def test_passing_bablok_basic_with_CI():
-    fig, ax = plt.subplots(1,1)
+def test_passing_bablok_basic_with_ci():
+    fig, ax = plt.subplots(1, 1)
     passingbablok(method1, method2, line_CI=True, ax=ax)
     return fig
 
+
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_passing_bablok_basic_squared():
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     passingbablok(method1, method2, square=True, ax=ax)
     return fig
 
+
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_deming_basic():
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     deming(method1, method2, ax=ax)
     return fig
 
+
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_deming_basic_title():
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     deming(method1, method2, title='Test', ax=ax)
     return fig
 
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_deming_basic_with_ci():
+    fig, ax = plt.subplots(1, 1)
+    deming(method1, method2, line_CI=True, ax=ax)
+    return fig
+
+
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_deming_no_bootstrap():
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     deming(method1, method2, bootstrap=None, ax=ax)
     return fig
 
+
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_deming_squared():
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(1, 1)
     deming(method1, method2, square=True, ax=ax)
     return fig
 
 
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_linear_basic():
+    fig, ax = plt.subplots(1, 1)
+    linear(method1, method2, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_linear_basic_title():
+    fig, ax = plt.subplots(1, 1)
+    linear(method1, method2, title='Test', ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_linear_with_ci():
+    fig, ax = plt.subplots(1, 1)
+    linear(method1, method2, line_CI=True, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_linear_squared():
+    fig, ax = plt.subplots(1, 1)
+    linear(method1, method2, square=True, ax=ax)
+    return fig

@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.6"
+  - "3.7"
+cache: pip
+install:
+  - pip install -r requirements.txt
+  - pip install -U pytest
+  - pip install -U pytest-mpl
+script:
+  - pytest methcomp --mpl-generate-path=baseline
+  - pytest methcomp --mpl
