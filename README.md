@@ -1,10 +1,10 @@
 methcomp: method comparison for clinical chemistry
 =======================================
 <div>
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp1.png" height="135">
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp3.png" height="135"> 
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp2.png" height="135">
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp4.png" height="135">
+<img src="https://wptmdoorn.name/assets/02methcomp/methcomp1.png" height="185">
+<img src="https://wptmdoorn.name/assets/02methcomp/methcomp3.png" height="185"> 
+<img src="https://wptmdoorn.name/assets/02methcomp/methcomp2.png" height="185">
+<img src="https://wptmdoorn.name/assets/02methcomp/methcomp4.png" height="185">
 </div> <br>
 
 --------------------------------------
