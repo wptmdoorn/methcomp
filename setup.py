@@ -16,7 +16,7 @@ MAINTAINER = 'William P.T.M. van Doorn'
 MAINTAINER_EMAIL = 'wptmdoorn@gmail.com'
 URL = 'https://github.com/wptmdoorn/methcomp'
 LICENSE = 'MIT'
-DOWNLOAD_URL = 'https://github.com/wptmdoorn/methcomp'
+DOWNLOAD_URL = 'https://github.com/wptmdoorn/methcomp/archive/v1.0.0.tar.gz'
 VERSION = '1.0.0'
 
 INSTALL_REQUIRES = [
