@@ -17,7 +17,7 @@ MAINTAINER_EMAIL = 'wptmdoorn@gmail.com'
 URL = 'https://github.com/wptmdoorn/methcomp'
 LICENSE = 'MIT'
 DOWNLOAD_URL = 'https://github.com/wptmdoorn/methcomp'
-VERSION = '0.4.0'
+VERSION = '1.0.0'
 
 INSTALL_REQUIRES = [
     'numpy>=1.17.2',

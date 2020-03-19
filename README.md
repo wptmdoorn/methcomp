@@ -20,8 +20,9 @@ method comparison for clinical chemistry methods, amongst others.
 
 Documentation
 ------------- 
-Online documentation is currently only available by clicking on [here](http://wptmdoorn.name/static/methcomp/docs/).
-Illustrative examples using the methcomp library are described in [blog post]().
+Online documentation is currently only available by clicking on [here](http://wptmdoorn.name/methcomp/docs/).  
+Illustrative examples using the methcomp library can be found in examples/ directory and in the blog post 
+[here](https://wptmdoorn.name/Method-Comparison/).
 
 Dependencies
 ------------
