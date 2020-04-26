@@ -65,5 +65,6 @@ if __name__ == "__main__":
         download_url=DOWNLOAD_URL,
         install_requires=INSTALL_REQUIRES,
         packages=PACKAGES,
-        classifiers=CLASSIFIERS
+        classifiers=CLASSIFIERS,
+        include_package_data=True,
     )

@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 from shapely.geometry import Polygon, Point
 
-__all__ = ["clarke", "parkes", "clarkezones", "parkeszones"]
+__all__ = ["clarke", "parkes", "seg",
+           "clarkezones", "parkeszones", "segscores"]
 
 
 class _Clarke(object):
@@ -738,3 +740,247 @@ def parkeszones(type, reference, test, units,
     else:
         labels = ['A', 'B', 'C', 'D', 'E']
         return [labels[i] for i in _zones]
+
+
+class _SEG(object):
+    """Internal class for drawing a surveillance error grid error grid plot"""
+
+    def __init__(self, reference, test, units,
+                 x_title, y_title, graph_title,
+                 xlim, ylim,
+                 color_points,
+                 percentage):
+        # variables assignment
+        self.reference: np.array = np.asarray(reference)
+        self.test: np.array = np.asarray(test)
+        self.units = units
+        self.graph_title: str = graph_title
+        self.x_title: str = x_title
+        self.y_title: str = y_title
+        self.xlim: list = xlim
+        self.ylim: list = ylim
+        self.color_points: str = color_points
+        self.percentage: bool = percentage
+
+        self._check_params()
+        self._derive_params()
+
+    def _check_params(self):
+        if len(self.reference) != len(self.test):
+            raise ValueError('Length of reference and test values are not equal')
+
+        if self.units not in ['mmol', 'mg/dl', 'mgdl']:
+            raise ValueError('The provided units should be one of the following: mmol, mgdl or mg/dl.')
+
+        if any([x is not None and not isinstance(x, str) for x in [self.x_title, self.y_title]]):
+            raise ValueError('Axes labels arguments should be provided as a str.')
+
+    def _derive_params(self):
+        if self.x_title is None:
+            _unit = 'mmol/L' if 'mmol' else 'mg/dL'
+            self.x_title = 'Reference glucose concentration ({})'.format(_unit)
+
+        if self.y_title is None:
+            _unit = 'mmol/L' if 'mmol' else 'mg/dL'
+            self.y_title = 'Predicted glucose concentration ({})'.format(_unit)
+
+
+    def _calc_error_score(self):
+        n = 18 if self.units == 'mmol' else 1
+        ref = self.reference * n
+        pred = self.test * n
+
+        _zones = []
+        data = np.loadtxt('../static/seg.csv')
+        _zones = np.array([data.T[int(p), int(t)] for p, t in zip(pred, ref)])
+
+        return _zones
+
+    def plot(self, ax):
+        # ref, pred
+        ref = self.reference
+        pred = self.test
+        _data = np.loadtxt('../static/seg.csv')
+
+        # calculate conversion factor if needed
+        n = 18 if self.units == 'mmol' else 1
+
+        maxX = self.xlim or 600
+        maxY = self.ylim or 600
+
+        # Define colormaps
+        _colors = [(0, 165 / 256, 0), (0, 255 / 256, 0), (255 / 256, 255 /256, 0),
+                           (255 / 256, 0, 0), (128 / 256, 0, 0)]
+        _nodes = [0.0, 0.4375, 1.0625, 2.7500, 4.000]
+
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list("",
+                                                                   list(zip([x/4 for x in _nodes],
+                                                                            _colors)))
+
+        # Plot color axes
+        cax = ax.imshow(np.flipud(np.array(plt.imread('../static/seg600.png'))),
+                        origin='lower',
+                        cmap=cmap,
+                        vmin=0, vmax=4)
+
+        # Plot color bar
+        cbar = plt.colorbar(cax,
+                            ticks=[0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],
+                            orientation='vertical',
+                            fraction=0.15,
+                            aspect=6)
+        cbar.ax.tick_params(labelsize=8)
+        cbar.ax.yaxis.set_label_position('left')
+        cbar.ax.set_ylabel('Risk score')
+
+        # Separators
+        for s in [0, 0.5, 1.5, 2.5, 3.5, 4]:
+            cbar.ax.plot([6, 6.5], [s]*2, '-', color='black', lw=1, alpha=1, clip_on=False)
+
+        # Labels
+        for l in [(0.25, 'None'), (1.0, 'Slight'), (2.0, 'Moderate'),
+                  (3.0, 'High'), (3.75, 'Extreme')]:
+            cbar.ax.text(6.2, l[0]-0.008, l[1], ha='left', va='center', rotation=0, fontsize=10)
+
+        if self.percentage:
+            seg_scores = self._calc_error_score()
+            _zones_sub = [[] for _ in range(8)]
+            edges = list(np.arange(0, 4.5, 0.5))
+
+            for x in range(len(edges)-1):
+                _zones_sub[x] = np.array(seg_scores[(seg_scores >= edges[x]) &
+                                                    (seg_scores < edges[x+1])])
+
+            perc_zones = [(len(x)/len(seg_scores))*100 for x in _zones_sub]
+
+            for i, x in enumerate(perc_zones):
+                cbar.ax.plot([0, 5], [(i*.5) + .5]*2, '--', color='grey', lw=1, alpha=.6)
+                if x > 0:
+                    _str = "<0.01%" if round(x, 2) == 0 else "{:.2f}%".format(x)
+                    cbar.ax.text(2, (i*.5)+.25, _str, ha='center', va='center', fontsize=9)
+
+
+
+        ax.scatter(self.reference*n,
+                   self.test*n, marker='o',
+                   color=self.color_points,
+                   alpha=0.6,
+                   s=8)
+
+        # limits and ticks
+        _ticks = [0, 90, 180, 270, 360, 450, 540]
+
+        ax.set_xticks([round(x, 1) for x in _ticks])
+        ax.set_yticks([round(x, 1) for x in _ticks])
+        ax.set_xticklabels([round(x/n, 1) for x in _ticks])
+        ax.set_yticklabels([round(x / n, 1) for x in _ticks])
+
+        ax.set_xlim(0, maxX)
+        ax.set_ylim(0, maxY)
+
+        # graph labels
+        ax.set_ylabel(self.y_title)
+        ax.set_xlabel(self.x_title)
+        if self.graph_title is not None:
+            ax.set_title(self.graph_title)
+
+
+def seg(reference, test, units,
+        x_label=None, y_label=None, title=None,
+        xlim=None, ylim=None,
+        color_points='white',
+        percentage=False,
+        square=False, ax=None):
+    """Provide a glucose error grid analyses as designed by the surveillance error grid.
+
+    This is an Axis-level function which will draw the surveillance error grid plot.
+    onto the current active Axis object unless ``ax`` is provided.
+
+
+    Parameters
+    ----------
+    reference, test : array, or list
+        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+    units : str
+        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+    x_label : str, optional
+        The label which is added to the X-axis. If None is provided, a standard
+        label will be added.
+    y_label : str, optional
+        The label which is added to the Y-axis. If None is provided, a standard
+        label will be added.
+    title : str, optional
+        Title of the plot. If None is provided, no title will be plotted.
+    xlim : list, optional
+        Minimum and maximum limits for X-axis. Should be provided as list or tuple.
+        If not set, matplotlib will decide its own bounds.
+    ylim : list, optional
+        Minimum and maximum limits for Y-axis. Should be provided as list or tuple.
+        If not set, matplotlib will decide its own bounds.
+    color_points : str, optional
+        Color of the individual differences that will be plotted. Defaults to 'auto' which colors
+        the points according to their relative zones.
+    percentage : bool, optional
+        If True, percentage of the zones will be depicted in the plot.
+    square : bool, optional
+        If True, set the Axes aspect to "equal" so each cell will be square-shaped.
+    ax : matplotlib Axes, optional
+        Axes in which to draw the plot, otherwise use the currently-active
+        Axes.
+
+    Returns
+    -------
+    ax : matplotlib Axes
+        Axes object with the Parkes error grid plot.
+
+    See Also
+    -------
+    Klonoff, D. C., Lias, C., et al. J Diabetes Sci Technol, vol. 8, no. 4, 2014, pp 658-672.
+    Kovatchev, B. P., Wakeman, C. A., et al. J Diabetes Sci Technol, vol 8, no. 4, 2014, pp. 673-684.
+    """
+
+    plotter: _SEG = _SEG(reference, test, units,
+                         x_label, y_label, title,
+                         xlim, ylim,
+                         color_points,
+                         percentage)
+
+    # Draw the plot and return the Axes
+    if ax is None:
+        ax = plt.gca()
+
+    if square:
+        ax.set_aspect('equal')
+
+    plotter.plot(ax)
+
+    return ax
+
+def segscores(reference, test, units):
+    """Provides the raw error values as depicted by the
+    surveillance error grid analysis for each point in the reference and test datasets.
+
+
+    Parameters
+    ----------
+    reference, test : array, or list
+        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+    units : str
+        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+
+
+    Returns
+    -------
+    segscores : list
+        Returns a list with a SEG score for each test, reference pair.
+
+    """
+
+    # obtain zones from a Clarke reference object
+    _zones = _SEG(reference, test, units,
+                     None, None, None,
+                     None, None,
+                     True, False,
+                     '#000000', 'auto', 'auto')._calc_error_score()
+
+    return _zones
