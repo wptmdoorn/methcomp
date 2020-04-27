@@ -788,7 +788,7 @@ class _SEG(object):
         self.ylim: list = ylim
         self.color_points: str = color_points
         self.percentage: bool = percentage
-        self.point_kws = {} if point_kws else point_kws.copy()
+        self.point_kws = {} if point_kws is None else point_kws.copy()
 
         self._check_params()
         self._derive_params()
