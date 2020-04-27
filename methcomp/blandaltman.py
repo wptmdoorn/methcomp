@@ -14,7 +14,8 @@ class _BlandAltman(object):
                  x_title, y_title, graph_title,
                  diff, limit_of_agreement, reference, CI,
                  xlim, ylim,
-                 color_mean, color_loa, color_points):
+                 color_mean, color_loa, color_points,
+                 point_kws):
         # variables assignment
         self.method1: np.array = np.asarray(method1)
         self.method2: np.array = np.asarray(method2)
@@ -30,6 +31,7 @@ class _BlandAltman(object):
         self.color_mean: str = color_mean
         self.color_loa: str = color_loa
         self.color_points: str = color_points
+        self.point_kws: dict = {} if point_kws is None else point_kws.copy()
 
         # check provided parameters
         self._check_params()
@@ -76,7 +78,8 @@ class _BlandAltman(object):
 
     def plot(self, ax: matplotlib.axes.Axes):
         # individual points
-        ax.scatter(self.mean, self.diff, s=20, alpha=0.6, color=self.color_points)
+        ax.scatter(self.mean, self.diff, s=20, alpha=0.6, color=self.color_points,
+                   **self.point_kws)
 
         # mean difference and SD lines
         ax.axhline(self.mean_diff, color=self.color_mean, linestyle='-')
@@ -129,6 +132,7 @@ def blandaltman(method1, method2,
                 diff='absolute', limit_of_agreement=1.96, reference=False, CI=0.95,
                 xlim=None, ylim=None,
                 color_mean='#008bff', color_loa='#FF7000', color_points='#000000',
+                point_kws=None,
                 ax=None):
     """Provide a method comparison using Bland-Altman plotting.
 
@@ -171,6 +175,8 @@ def blandaltman(method1, method2,
         Color of the limit of agreement lines that will be plotted.
     color_points : str, optional
         Color of the individual differences that will be plotted.
+    point_kws : dict of key, value mappings, optional
+        Additional keyword arguments for `plt.scatter`.
     ax : matplotlib Axes, optional
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
@@ -191,7 +197,8 @@ def blandaltman(method1, method2,
     plotter: _BlandAltman = _BlandAltman(method1, method2, x_label, y_label, title,
                                          diff, limit_of_agreement, reference, CI,
                                          xlim, ylim,
-                                         color_mean, color_loa, color_points)
+                                         color_mean, color_loa, color_points,
+                                         point_kws)
 
     # Draw the plot and return the Axes
     if ax is None:

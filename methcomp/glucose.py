@@ -14,7 +14,8 @@ class _Clarke(object):
                  x_title, y_title, graph_title,
                  xlim, ylim,
                  color_grid, color_gridlabels, color_points,
-                 grid, percentage):
+                 grid, percentage,
+                 point_kws, grid_kws):
         # variables assignment
         self.reference: np.array = np.asarray(reference)
         self.test: np.array = np.asarray(test)
@@ -29,6 +30,8 @@ class _Clarke(object):
         self.color_points: str = color_points
         self.grid: bool = grid
         self.percentage: bool = percentage
+        self.point_kws = {} if point_kws is None else point_kws.copy()
+        self.grid_kws = {} if grid_kws is None else grid_kws.copy()
 
         self._check_params()
         self._derive_params()
@@ -136,20 +139,23 @@ class _Clarke(object):
                        self.test,
                        marker='o',
                        alpha=0.6,
-                       c=[colors[i] for i in self._calc_error_zone()], s=8)
+                       c=[colors[i] for i in self._calc_error_zone()], s=8,
+                       **self.point_kws)
         else:
             ax.scatter(self.reference,
                        self.test, marker='o',
                        color=self.color_points,
                        alpha=0.6,
-                       s=8)
+                       s=8,
+                       **self.point_kws)
 
         # plot grid lines
         if self.grid:
             for g in _gridlines:
                 ax.plot(np.array(g[0])/n,
                         np.array(g[1])/n,
-                        g[2], color=self.color_grid)
+                        g[2], color=self.color_grid,
+                        **self.grid_kws)
 
             if self.percentage:
                 zones = [['A', 'B', 'C', 'D', 'E'][i] for i in self._calc_error_zone()]
@@ -188,6 +194,7 @@ def clarke(reference, test, units,
            xlim=None, ylim=None,
            color_grid='#000000', color_gridlabels='auto', color_points='auto',
            grid=True, percentage=False,
+           point_kws=None, grid_kws=None,
            square=False, ax=None):
     """Provide a glucose error grid analyses as designed by Clarke.
 
@@ -227,6 +234,10 @@ def clarke(reference, test, units,
         Enable the grid lines of the Parkes error. Defaults to True.
     percentage : bool, optional
         If True, percentage of the zones will be depicted in the plot.
+    point_kws : dict of key, value mappings, optional
+        Additional keyword arguments for `plt.scatter`.
+    grid_kws : dict of key, value mappings, optional
+        Additional keyword arguments for the grid with `plt.plot`.
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be square-shaped.
     ax : matplotlib Axes, optional
@@ -247,7 +258,8 @@ def clarke(reference, test, units,
                                x_label, y_label, title,
                                xlim, ylim,
                                color_grid, color_gridlabels, color_points,
-                               grid, percentage)
+                               grid, percentage,
+                               point_kws, grid_kws)
 
     # Draw the plot and return the Axes
     if ax is None:
@@ -288,7 +300,8 @@ def clarkezones(reference, test, units,
                      None, None, None,
                      None, None,
                      '#000000', 'auto', 'auto',
-                     True, False)._calc_error_zone()
+                     True, False,
+                     None, None)._calc_error_zone()
 
     if numeric:
         return _zones
@@ -304,7 +317,8 @@ class _Parkes(object):
                  x_title, y_title, graph_title,
                  xlim, ylim,
                  color_grid, color_gridlabels, color_points,
-                 grid, percentage):
+                 grid, percentage,
+                 point_kws, grid_kws):
         # variables assignment
         self.type: int = type
         self.reference: np.array = np.asarray(reference)
@@ -320,6 +334,8 @@ class _Parkes(object):
         self.color_points: str = color_points
         self.grid: bool = grid
         self.percentage: bool = percentage
+        self.point_kws = {} if point_kws is None else point_kws.copy()
+        self.grid_kws = {} if grid_kws is None else grid_kws.copy()
 
         self._check_params()
         self._derive_params()
@@ -568,20 +584,23 @@ class _Parkes(object):
                        self.test,
                        marker='o',
                        alpha=0.6,
-                       c=[colors[i] for i in self._calc_error_zone()], s=8)
+                       c=[colors[i] for i in self._calc_error_zone()], s=8,
+                       **self.point_kws)
         else:
             ax.scatter(self.reference,
                        self.test, marker='o',
                        color=self.color_points,
                        alpha=0.6,
-                       s=8)
+                       s=8,
+                       **self.point_kws)
 
         # plot grid lines
         if self.grid:
             for g in _gridlines:
                 ax.plot(np.array(g[0]),
                         np.array(g[1]),
-                        g[2], color=self.color_grid)
+                        g[2], color=self.color_grid,
+                        **self.grid_kws)
 
             if self.percentage:
                 zones = [['A', 'B', 'C', 'D', 'E'][i] for i in self._calc_error_zone()]
@@ -626,6 +645,7 @@ def parkes(type, reference, test, units,
            xlim=None, ylim=None,
            color_grid='#000000', color_gridlabels='auto', color_points='auto',
            grid=True, percentage=False,
+           point_kws=None, grid_kws=None,
            square=False, ax=None):
     """Provide a glucose error grid analyses as designed by Parkes.
 
@@ -670,6 +690,10 @@ def parkes(type, reference, test, units,
         If True, percentage of the zones will be depicted in the plot.
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be square-shaped.
+    point_kws : dict of key, value mappings, optional
+        Additional keyword arguments for `plt.scatter`.
+    grid_kws : dict of key, value mappings, optional
+        Additional keyword arguments for the grid with `plt.plot`.
     ax : matplotlib Axes, optional
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
@@ -689,7 +713,8 @@ def parkes(type, reference, test, units,
                                x_label, y_label, title,
                                xlim, ylim,
                                color_grid, color_gridlabels, color_points,
-                               grid, percentage)
+                               grid, percentage,
+                               point_kws, grid_kws)
 
     # Draw the plot and return the Axes
     if ax is None:
@@ -723,8 +748,8 @@ def parkeszones(type, reference, test, units,
 
     Returns
     -------
-    clarkezones : list
-        Returns a list depecting the zones for each of the reference and test values.
+    parkeszones : list
+        Returns a list depicting the zones for each of the reference and test values.
 
     """
 
@@ -733,7 +758,8 @@ def parkeszones(type, reference, test, units,
                      None, None, None,
                      None, None,
                      True, False,
-                     '#000000', 'auto', 'auto')._calc_error_zone()
+                     '#000000', 'auto', 'auto',
+                     None, None)._calc_error_zone()
 
     if numeric:
         return _zones
@@ -749,7 +775,8 @@ class _SEG(object):
                  x_title, y_title, graph_title,
                  xlim, ylim,
                  color_points,
-                 percentage):
+                 percentage,
+                 point_kws):
         # variables assignment
         self.reference: np.array = np.asarray(reference)
         self.test: np.array = np.asarray(test)
@@ -761,6 +788,7 @@ class _SEG(object):
         self.ylim: list = ylim
         self.color_points: str = color_points
         self.percentage: bool = percentage
+        self.point_kws = {} if point_kws else point_kws.copy()
 
         self._check_params()
         self._derive_params()
@@ -865,7 +893,8 @@ class _SEG(object):
                    self.test*n, marker='o',
                    color=self.color_points,
                    alpha=0.6,
-                   s=8)
+                   s=8,
+                   **self.point_kws)
 
         # limits and ticks
         _ticks = [0, 90, 180, 270, 360, 450, 540]
@@ -890,6 +919,7 @@ def seg(reference, test, units,
         xlim=None, ylim=None,
         color_points='white',
         percentage=False,
+        point_kws=None,
         square=False, ax=None):
     """Provide a glucose error grid analyses as designed by the surveillance error grid.
 
@@ -918,10 +948,11 @@ def seg(reference, test, units,
         Minimum and maximum limits for Y-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
     color_points : str, optional
-        Color of the individual differences that will be plotted. Defaults to 'auto' which colors
-        the points according to their relative zones.
+        Color of the individual differences that will be plotted. Defaults to 'white'.
     percentage : bool, optional
         If True, percentage of the zones will be depicted in the plot.
+    point_kws : dict of key, value mappings, optional
+        Additional keyword arguments for `plt.scatter`.
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be square-shaped.
     ax : matplotlib Axes, optional
@@ -931,7 +962,7 @@ def seg(reference, test, units,
     Returns
     -------
     ax : matplotlib Axes
-        Axes object with the Parkes error grid plot.
+        Axes object with the Surveillance error grid plot.
 
     See Also
     -------
@@ -943,7 +974,8 @@ def seg(reference, test, units,
                          x_label, y_label, title,
                          xlim, ylim,
                          color_points,
-                         percentage)
+                         percentage,
+                         point_kws)
 
     # Draw the plot and return the Axes
     if ax is None:

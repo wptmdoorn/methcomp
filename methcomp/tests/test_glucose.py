@@ -1,4 +1,4 @@
-from methcomp import clarke, parkes
+from methcomp import clarke, parkes, seg
 import matplotlib.pyplot as plt
 import pytest
 
@@ -98,4 +98,33 @@ def test_parkes_no_mgdl():
 def test_parkes_squared():
     fig, ax = plt.subplots(1, 1)
     parkes(1, reference, test, units='mmol', square=True, ax=ax)
+    return fig
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_clarke_basic():
+    fig, ax = plt.subplots(1, 1)
+    seg(reference, test, units='mmol', ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_seg_basic_title():
+    fig, ax = plt.subplots(1, 1)
+    seg(reference, test, units='mmol', title='Test', ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_seg_no_percentages():
+    fig, ax = plt.subplots(1, 1)
+    seg(reference, test, units='mmol', percentage=False, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_clarke_no_mgdl():
+    fig, ax = plt.subplots(1, 1)
+    _ref = [x*18 for x in reference]
+    _test = [x*18 for x in test]
+    seg(_ref, _test, units='mgdl', percentage=False, ax=ax)
     return fig

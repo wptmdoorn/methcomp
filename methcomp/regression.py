@@ -15,7 +15,8 @@ class _Deming(object):
                  vr, sdr, bootstrap,
                  x_label, y_label, title,
                  CI, line_reference, line_CI, legend,
-                 color_points, color_deming):
+                 color_points, color_deming,
+                 point_kws):
         self.method1: np.array = np.asarray(method1)
         self.method2: np.array = np.asarray(method2)
         self.vr = vr
@@ -30,6 +31,7 @@ class _Deming(object):
         self.line_reference = line_reference
         self.line_CI = line_CI
         self.legend = legend
+        self.point_kws = {} if point_kws is None else point_kws.copy()
 
         self._check_params()
         self._derive_params()
@@ -132,10 +134,11 @@ def deming(method1, method2,
            x_label='Method 1', y_label='Method 2', title=None,
            CI=0.95, line_reference=True, line_CI=False, legend=True,
            color_points='#000000', color_deming='#008bff',
+           point_kws=None,
            square=False, ax=None):
     """Provide a method comparison using Deming regression.
 
-    This is an Axis-level function which will draw the Passing-Bablok plot
+    This is an Axis-level function which will draw the Deming plot
     onto the current active Axis object unless ``ax`` is provided.
 
 
@@ -159,10 +162,9 @@ def deming(method1, method2,
         The label which is added to the Y-axis. If None is provided, a standard
         label will be added.
     title : str, optional
-        Title of the Passing-Bablok plot. If None is provided, no title will be plotted.
+        Title of the plot. If None is provided, no title will be plotted.
     CI : float, optional
-        The confidence interval employed in the mean difference and limit of agreement
-        lines. Defaults to 0.95.
+        The confidence interval employed in Deming line. Defaults to 0.95.
     line_reference : bool, optional
         If True, a grey reference line at y=x will be plotted in the plot.
         Defaults to true.
@@ -170,7 +172,7 @@ def deming(method1, method2,
         If True, dashed lines will be plotted at the boundaries of the confidence intervals.
         Defaults to false.
     legend : bool, optional
-        If True, will provide a legend containing the computed Passing-Bablok equation.
+        If True, will provide a legend containing the computed Deming equation.
         Defaults to true.
     color_points : str, optional
         Color of the individual differences that will be plotted.
@@ -181,6 +183,8 @@ def deming(method1, method2,
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be
         square-shaped.
+    point_kws : dict of key, value mappings, optional
+        Additional keyword arguments for `plt.scatter`.
     ax : matplotlib Axes, optional
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
@@ -188,7 +192,7 @@ def deming(method1, method2,
     Returns
     -------
     ax : matplotlib Axes
-        Axes object with the Bland-Altman plot.
+        Axes object with the Deming plot.
 
     See Also
     -------
@@ -200,7 +204,8 @@ def deming(method1, method2,
                                vr, sdr, bootstrap,
                                x_label, y_label, title,
                                CI, line_reference, line_CI, legend,
-                               color_points, color_deming)
+                               color_points, color_deming,
+                               point_kws)
 
     # Draw the plot and return the Axes
     if ax is None:
@@ -220,7 +225,8 @@ class _PassingBablok(object):
     def __init__(self, method1, method2,
                  x_label, y_label, title,
                  CI, line_reference, line_CI, legend,
-                 color_points, color_paba):
+                 color_points, color_paba,
+                 point_kws):
         self.method1: np.array = np.asarray(method1)
         self.method2: np.array = np.asarray(method2)
         self.x_title = x_label
@@ -232,6 +238,7 @@ class _PassingBablok(object):
         self.line_reference = line_reference
         self.line_CI = line_CI
         self.legend = legend
+        self.point_kws = {} if point_kws is None else point_kws.copy()
 
         self._check_params()
         self._derive_params()
@@ -273,7 +280,8 @@ class _PassingBablok(object):
 
     def plot(self, ax):
         # plot individual points
-        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points)
+        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points,
+                   **self.point_kws)
 
         # plot reference line
         if self.line_reference:
@@ -303,6 +311,7 @@ def passingbablok(method1, method2,
                   x_label='Method 1', y_label='Method 2', title=None,
                   CI=0.95, line_reference=True, line_CI=False, legend=True,
                   color_points='#000000', color_paba='#008bff',
+                  point_kws=None,
                   square=False, ax=None):
     """Provide a method comparison using Passing-Bablok regression.
 
@@ -323,8 +332,7 @@ def passingbablok(method1, method2,
     title : str, optional
         Title of the Passing-Bablok plot. If None is provided, no title will be plotted.
     CI : float, optional
-        The confidence interval employed in the mean difference and limit of agreement
-        lines. Defaults to 0.95.
+        The confidence interval employed in the passing-bablok line. Defaults to 0.95.
     line_reference : bool, optional
         If True, a grey reference line at y=x will be plotted in the plot.
         Defaults to true.
@@ -343,6 +351,8 @@ def passingbablok(method1, method2,
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be
         square-shaped.
+    point_kws : dict of key, value mappings, optional
+        Additional keyword arguments for `plt.scatter`.
     ax : matplotlib Axes, optional
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
@@ -350,7 +360,7 @@ def passingbablok(method1, method2,
     Returns
     -------
     ax : matplotlib Axes
-        Axes object with the Bland-Altman plot.
+        Axes object with the Passing-Bablok plot.
 
     See Also
     -------
@@ -360,7 +370,8 @@ def passingbablok(method1, method2,
     plotter: _PassingBablok = _PassingBablok(method1, method2,
                                              x_label, y_label, title,
                                              CI, line_reference, line_CI, legend,
-                                             color_points, color_paba)
+                                             color_points, color_paba,
+                                             point_kws)
 
     # Draw the plot and return the Axes
     if ax is None:
@@ -379,7 +390,8 @@ class _Linear(object):
     def __init__(self, method1, method2,
                  x_label, y_label, title,
                  CI, line_reference, line_CI, legend,
-                 color_points, color_paba):
+                 color_points, color_regr,
+                 point_kws):
         self.method1: np.array = np.asarray(method1)
         self.method2: np.array = np.asarray(method2)
         self.x_title = x_label
@@ -387,10 +399,11 @@ class _Linear(object):
         self.graph_title = title
         self.CI = CI
         self.color_points = color_points
-        self.color_paba = color_paba
+        self.color_regr = color_regr
         self.line_reference = line_reference
         self.line_CI = line_CI
         self.legend = legend
+        self.point_kws = {} if point_kws is None else point_kws.copy()
 
         self._check_params()
         self._derive_params()
@@ -414,7 +427,8 @@ class _Linear(object):
 
     def plot(self, ax):
         # plot individual points
-        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points)
+        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points,
+                   **self.point_kws)
 
         # plot reference line
         if self.line_reference:
@@ -425,8 +439,8 @@ class _Linear(object):
         _xvals = np.array(ax.get_xlim())
         _yvals = [self.intercept[s] + self.slope[s] * _xvals for s in range(0, 3)]
         ax.plot(_xvals, _yvals[0], label=f'{self.intercept[0]:.2f} + {self.slope[0]:.2f} * Method 1',
-                color=self.color_paba, linestyle='-')
-        ax.fill_between(_xvals, _yvals[1], _yvals[2], color=self.color_paba, alpha=0.2)
+                color=self.color_regr, linestyle='-')
+        ax.fill_between(_xvals, _yvals[1], _yvals[2], color=self.color_regr, alpha=0.2)
         if self.line_CI:
             ax.plot(_xvals, _yvals[1], linestyle='--')
             ax.plot(_xvals, _yvals[2], linestyle='--')
@@ -443,7 +457,8 @@ class _Linear(object):
 def linear(method1, method2,
            x_label='Method 1', y_label='Method 2', title=None,
            CI=0.95, line_reference=True, line_CI=False, legend=True,
-           color_points='#000000', color_paba='#008bff',
+           color_points='#000000', color_regr='#008bff',
+           point_kws=None,
            square=False, ax=None):
     """Provide a method comparison using simple, linear regression.
 
@@ -464,8 +479,7 @@ def linear(method1, method2,
     title : str, optional
         Title of the linear regression plot. If None is provided, no title will be plotted.
     CI : float, optional
-        The confidence interval employed in the mean difference and limit of agreement
-        lines. Defaults to 0.95.
+        The confidence interval employed in the linear regression line. Defaults to 0.95.
     line_reference : bool, optional
         If True, a grey reference line at y=x will be plotted in the plot.
         Defaults to true.
@@ -484,6 +498,8 @@ def linear(method1, method2,
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be
         square-shaped.
+    point_kws : dict of key, value mappings, optional
+        Additional keyword arguments for `plt.scatter`.
     ax : matplotlib Axes, optional
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
@@ -491,7 +507,7 @@ def linear(method1, method2,
     Returns
     -------
     ax : matplotlib Axes
-        Axes object with the Bland-Altman plot.
+        Axes object with the linear regression plot.
 
     See Also
     -------
@@ -501,7 +517,8 @@ def linear(method1, method2,
     plotter: _Linear = _Linear(method1, method2,
                                x_label, y_label, title,
                                CI, line_reference, line_CI, legend,
-                               color_points, color_paba)
+                               color_points, color_regr,
+                               point_kws)
 
     # Draw the plot and return the Axes
     if ax is None:
