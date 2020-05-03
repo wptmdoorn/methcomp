@@ -2,6 +2,13 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 from shapely.geometry import Polygon, Point
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
+
+from . import static
 
 __all__ = ["clarke", "parkes", "seg",
            "clarkezones", "parkeszones", "segscores"]
@@ -819,7 +826,7 @@ class _SEG(object):
         pred = self.test * n
 
         _zones = []
-        data = np.loadtxt('../static/seg.csv')
+        data = np.loadtxt(pkg_resources.open_text(static, 'seg.csv'))
         _zones = np.array([data.T[int(p), int(t)] for p, t in zip(pred, ref)])
 
         return _zones
@@ -828,7 +835,7 @@ class _SEG(object):
         # ref, pred
         ref = self.reference
         pred = self.test
-        _data = np.loadtxt('../static/seg.csv')
+        _data = np.loadtxt(pkg_resources.open_text(static, 'seg.csv'))
 
         # calculate conversion factor if needed
         n = 18 if self.units == 'mmol' else 1
@@ -846,7 +853,8 @@ class _SEG(object):
                                                                             _colors)))
 
         # Plot color axes
-        cax = ax.imshow(np.flipud(np.array(plt.imread('../static/seg600.png'))),
+        grid_path = str(pkg_resources.files(static).joinpath('seg600.png'))
+        cax = ax.imshow(np.flipud(np.array(plt.imread(grid_path))),
                         origin='lower',
                         cmap=cmap,
                         vmin=0, vmax=4)
@@ -1012,7 +1020,7 @@ def segscores(reference, test, units):
     _zones = _SEG(reference, test, units,
                      None, None, None,
                      None, None,
-                     True, False,
-                     '#000000', 'auto', 'auto')._calc_error_score()
+                     '#000000',
+                     None, None)._calc_error_score()
 
     return _zones

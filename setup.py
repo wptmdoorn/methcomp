@@ -20,12 +20,13 @@ DOWNLOAD_URL = 'https://github.com/wptmdoorn/methcomp/archive/v1.0.0.tar.gz'
 VERSION = '1.0.0'
 
 INSTALL_REQUIRES = [
-    'numpy>=1.17.2',
-    'scipy>=1.3.1',
-    'matplotlib>=3.1.2',
-    'pandas',
-    'shapely',
-    'statsmodels'
+    "numpy>=1.17.2",
+    "scipy>=1.3.1",
+    "matplotlib>=3.1.2",
+    "pandas",
+    "shapely",
+    "statsmodels",
+    "importlib_resources ; python_version<'3.7'"
 ]
 
 PACKAGES = [

@@ -1,2 +1,2 @@
-include static/seg.csv
-include static/seg600.png
+include methcomp/static/seg.csv
+include methcomp/static/seg600.png
