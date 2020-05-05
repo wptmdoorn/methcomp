@@ -4,4 +4,4 @@ matplotlib==3.1.2
 pandas==1.0.1
 shapely==1.7.0
 statsmodels==0.11.1
-importlib_resources
+importlib_resources; python_version == '3.6'
