@@ -4,7 +4,7 @@ import numpy as np
 from shapely.geometry import Polygon, Point
 try:
      import importlib.resources as pkg_resources
-     from pkg_resources import path as path_func
+     from importlib.resources import path as path_func
 except ImportError:
     # Try backported to PY<37 `importlib_resources`.
     import importlib_resources as pkg_resources
