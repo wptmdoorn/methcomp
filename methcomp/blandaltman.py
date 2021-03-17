@@ -40,7 +40,7 @@ class _BlandAltman(object):
     def _derive_params(self):
         # perform necessary calculations and processing
         self.n: float = len(self.method1)
-        self.mean: np.array = np.mean([self.method1, self.method1], axis=0)
+        self.mean: np.array = np.mean([self.method1, self.method2], axis=0)
 
         if self.diff_method == 'absolute':
             self.diff = self.method1 - self.method2

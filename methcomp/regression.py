@@ -265,7 +265,7 @@ class _PassingBablok(object):
         k = math.floor(len([a for a in self.sv if a < 0]) / 2)
 
         if n % 2 == 1:
-            self.slope = self.sv[int((n + 1) / k + 2)]
+            self.slope = self.sv[int((n + 1) / 2 + k)]
         else:
             self.slope = math.sqrt(self.sv[int(n / 2 + k)] * self.sv[int(n / 2 + k + 1)])
 

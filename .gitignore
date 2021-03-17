@@ -10,3 +10,4 @@ cover/
 .pytest_cache/
 venv/
 methcomp/tests/baseline/
+.vscode/
