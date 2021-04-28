@@ -1,13 +1,13 @@
 methcomp: method comparison for clinical chemistry
 =======================================
 <div>
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp1.png" height="180">
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp3.png" height="180"> 
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp2.png" height="180">
-<img src="https://wptmdoorn.name/assets/02methcomp/methcomp4.png" height="180">
+<img src="https://raw.githubusercontent.com/wptmdoorn/methcomp/master/doc/_static/example_1.png" height="180">
+<img src="https://raw.githubusercontent.com/wptmdoorn/methcomp/master/doc/_static/example_2.png" height="180"> 
+<img src="https://raw.githubusercontent.com/wptmdoorn/methcomp/master/doc/_static/example_3.png" height="180">
+<img src="https://raw.githubusercontent.com/wptmdoorn/methcomp/master/doc/_static/example_4.png" height="180">
 </div> <br>
 
---------------------------------------
+****--------------------------------------
 
 [![PyPI Version](https://img.shields.io/badge/pypi-v1.0.0-blue)](https://pypi.org/project/methcomp/)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](https://github.com/wptmdoorn/methcomp/blob/master/LICENSE)
@@ -20,7 +20,7 @@ method comparison for clinical chemistry methods, amongst others.
 
 Documentation
 ------------- 
-Online documentation is currently only available by clicking on [here](http://wptmdoorn.name/methcomp/docs/).  
+Online documentation is currently only available by clicking on [here](https://methcomp.readthedocs.io/en/latest/).  
 Illustrative examples using the methcomp library can be found in examples/ directory and in the blog post 
 [here](https://wptmdoorn.name/Method-Comparison/).
 
@@ -30,7 +30,7 @@ Methcomp supports Python 2 and 3.
 Installation requires [numpy](http://www.numpy.org/), 
 [scipy](https://www.scipy.org/), 
 [pandas](https://pandas.pydata.org/), 
-and [matplotlib](https://matplotlib.org/).
+and [matplotlib](https://matplotlib.org/).****
 
 Installation
 ------------
