@@ -7,7 +7,7 @@ methcomp: method comparison for clinical chemistry
 <img src="https://raw.githubusercontent.com/wptmdoorn/methcomp/master/doc/_static/example_4.png" height="180">
 </div> <br>
 
-****--------------------------------------
+=======================================
 
 [![PyPI Version](https://img.shields.io/badge/pypi-v1.0.0-blue)](https://pypi.org/project/methcomp/)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](https://github.com/wptmdoorn/methcomp/blob/master/LICENSE)

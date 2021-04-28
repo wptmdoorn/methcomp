@@ -790,7 +790,6 @@ class _SEG(object):
     def __init__(self, reference, test, units,
                  x_title, y_title, graph_title,
                  xlim, ylim,
-                 color_points,
                  percentage,
                  point_kws):
         # variables assignment
@@ -802,7 +801,6 @@ class _SEG(object):
         self.y_title: str = y_title
         self.xlim: list = xlim
         self.ylim: list = ylim
-        self.color_points: str = color_points
         self.percentage: bool = percentage
         self.point_kws = {} if point_kws is None else point_kws.copy()
 
@@ -900,16 +898,23 @@ class _SEG(object):
 
             for i, x in enumerate(perc_zones):
                 cbar.ax.plot([0, 5], [(i*.5) + .5]*2, '--', color='grey', lw=1, alpha=.6)
+
                 if x > 0:
-                    _str = "<0.01%" if round(x, 2) == 0 else "{:.2f}%".format(x)
-                    cbar.ax.text(2, (i*.5)+.25, _str, ha='center', va='center', fontsize=9)
+                    if round(x, 2) == 0:
+                        _str = "<0.01%"
+                    else:
+                        _str = "{:.2f}%".format(x)
+
+                    cbar.ax.text(2, (i * 0.5) + .25, _str,
+                                 ha='center', va='center', fontsize=9)
 
 
 
         ax.scatter(self.reference*n,
                    self.test*n, marker='o',
-                   color=self.color_points,
-                   alpha=0.6,
+                   edgecolors = 'black',
+                   facecolors = 'white',
+                   alpha=0.8,
                    s=8,
                    **self.point_kws)
 
@@ -934,7 +939,6 @@ class _SEG(object):
 def seg(reference, test, units,
         x_label=None, y_label=None, title=None,
         xlim=None, ylim=None,
-        color_points='white',
         percentage=False,
         point_kws=None,
         square=False, ax=None):
@@ -964,8 +968,6 @@ def seg(reference, test, units,
     ylim : list, optional
         Minimum and maximum limits for Y-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
-    color_points : str, optional
-        Color of the individual differences that will be plotted. Defaults to 'white'.
     percentage : bool, optional
         If True, percentage of the zones will be depicted in the plot.
     point_kws : dict of key, value mappings, optional
@@ -990,7 +992,6 @@ def seg(reference, test, units,
     plotter: _SEG = _SEG(reference, test, units,
                          x_label, y_label, title,
                          xlim, ylim,
-                         color_points,
                          percentage,
                          point_kws)
 
@@ -1029,7 +1030,6 @@ def segscores(reference, test, units):
     _zones = _SEG(reference, test, units,
                      None, None, None,
                      None, None,
-                     '#000000',
                      None, None)._calc_error_score()
 
     return _zones
