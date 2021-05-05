@@ -17,8 +17,6 @@ except ImportError:
     def path_func(pkg, file):
         return pkg_resources.files(pkg).joinpath(file)
 
-from . import static
-
 __all__ = ["clarke", "parkes", "seg",
            "clarkezones", "parkeszones", "segscores"]
 
@@ -833,6 +831,7 @@ class _SEG(object):
         pred = self.test * n
 
         _zones = []
+        from . import static # temporary fix
         data = np.loadtxt(pkg_resources.open_text(static, 'seg.csv'))
         _zones = np.array([data.T[int(p), int(t)] for p, t in zip(pred, ref)])
 
@@ -842,6 +841,7 @@ class _SEG(object):
         # ref, pred
         ref = self.reference
         pred = self.test
+        from . import static # temporary fix 
         _data = np.loadtxt(pkg_resources.open_text(static, 'seg.csv'))
 
         # calculate conversion factor if needed
@@ -860,6 +860,7 @@ class _SEG(object):
                                                                             _colors)))
 
         # Plot color axes
+        from . import static # temporary fix
         grid_path = str(path_func(static, 'seg600.png'))
         cax = ax.imshow(np.flipud(np.array(plt.imread(grid_path))),
                         origin='lower',
