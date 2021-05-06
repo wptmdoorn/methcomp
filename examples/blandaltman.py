@@ -12,5 +12,11 @@ method2 = [1.03, 2.05, 2.79, 3.67,
            13.47, 13.83, 15.15, 16.12,
            16.94, 18.09, 19.13, 19.54]
 
-blandaltman(method1, method2, CI=.95, reference=True)
+ba = blandaltman(method1, method2, CI=.95)
+
+# get statistics
+print(ba.statistics())
+
+# plot with some title
+ba.plot(graph_title='Test')
 plt.show()
