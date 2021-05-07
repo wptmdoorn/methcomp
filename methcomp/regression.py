@@ -5,6 +5,8 @@ import statsmodels.api as sm
 import math
 import numpy as np
 
+from .calc_regression import calc_passing_bablok
+
 __all__ = ["deming", "passingbablok", "linear"]
 
 
@@ -252,31 +254,7 @@ class _PassingBablok(object):
             raise ValueError('Axes labels arguments should be provided as a str.')
 
     def _derive_params(self):
-        self.n = len(self.method1)
-        self.sv = []
-
-        for i in range(self.n - 1):
-            for j in range(i + 1, self.n):
-                self.sv.append((self.method2[i] - self.method2[j]) /
-                               (self.method1[i] - self.method1[j]))
-
-        self.sv.sort()
-        n = len(self.sv)
-        k = math.floor(len([a for a in self.sv if a < 0]) / 2)
-
-        if n % 2 == 1:
-            self.slope = self.sv[int((n + 1) / 2 + k)]
-        else:
-            self.slope = math.sqrt(self.sv[int(n / 2 + k)] * self.sv[int(n / 2 + k + 1)])
-
-        _ci = st.norm.ppf(1 - (1 - self.CI) / 2) * math.sqrt((self.n * (self.n - 1) * (2 * self.n + 5)) / 18)
-        _m1 = int(round((n - _ci) / 2))
-        _m2 = n - _m1 - 1
-
-        self.slope = [self.slope, self.sv[k + _m1], self.sv[k + _m2]]
-        self.intercept = [np.median(self.method2 - self.slope[0] * self.method1),
-                          np.median(self.method2 - self.slope[1] * self.method1),
-                          np.median(self.method2 - self.slope[2] * self.method1)]
+        self.slope, self.intercept = calc_passing_bablok(self.method1, self.method2, self.CI)
 
     def plot(self, ax):
         # plot individual points
