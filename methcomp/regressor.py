@@ -186,40 +186,28 @@ class Regressor(ABC):
 
 class PassingBablok(Regressor):
 
-    """Passing-Bablok Regressor
-
-    Attributes
-    ----------
-    intercept : TYPE
-    Description
-    n : TYPE
-    Description
-    slope : TYPE
-    Description
-    sv : list
-    Description
-    """
+    """Passing-Bablok Regressor"""
 
     def __init__(
         self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95, **kwargs
     ):
         """Construct a Passing-Bablok Regressor
-
+        
         Parameters
         ----------
         method1 : np.ndarray
-            Description
+            Values for method 1
         method2 : np.ndarray
-            Description
+            Values for method 2
         CI : float, optional
-            Description
+            The confidence interval employed in regression line (default=0.95)
         **kwargs
             Regressor keyword arguments
         """
         super().__init__(method1, method2, CI, **kwargs)
 
     def calculate(self):
-        """Summary"""
+        """Calculate regression parameters."""
         m = len(self.method2)
         # Define pair indices
         idx = np.array(np.triu_indices(m, 1))
@@ -274,13 +262,13 @@ class Deming(Regressor):
         Parameters
         ----------
         method1 : np.ndarray
-            Description
+            Values for method 1
         method2 : np.ndarray
-            Description
+            Values for method 2
         CI : float, optional
-            Description
+            The confidence interval employed in regression line (default=0.95)
         **kwargs
-            keyword arguments for regressor
+            Regressor keyword arguments
         """
         super().__init__(method1, method2, CI, **kwargs)
 
@@ -297,11 +285,11 @@ class Linear(Regressor):
         Parameters
         ----------
         method1 : np.ndarray
-            Description
+            Values for method 1
         method2 : np.ndarray
-            Description
+            Values for method 2
         CI : float, optional
-            Description
+            The confidence interval employed in regression line (default=0.95)
         **kwargs
             Regressor keyword arguments
         """
