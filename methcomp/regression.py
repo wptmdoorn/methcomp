@@ -288,16 +288,11 @@ class _PassingBablok(object):
         ci = st.norm.ppf((self.CI + 1) * 0.5) * math.sqrt(m * (m - 1) * (2 * m + 5) / 18)
         m1 = int((n - ci) // 2)
         m2 = n - m1 + 1
-
-        slope = (slope, S[k + m1], S[k + m2])
-        intercept = (
-            np.median(self.method2 - slope[0] * self.method1),
-            np.median(self.method2 - slope[2] * self.method1),
-            np.median(self.method2 - slope[1] * self.method1),
-        )
-
+        
+        slope = np.array((slope, S[k + m1], S[k + m2]))
+        intercept = np.median(self.method2-slope[:,None]*self.method1, axis=1)[[0,2,1]]
+        
         self.slope, self.intercept = slope, intercept
-        return slope, intercept
 
 
     def plot(self, ax):
