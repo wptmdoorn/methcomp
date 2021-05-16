@@ -214,9 +214,8 @@ class PassingBablok(Regressor):
 
     def calculate(self):
         """Calculate regression parameters."""
-        m = len(self.method2)
         # Define pair indices
-        idx = np.array(np.triu_indices(m, 1))
+        idx = np.array(np.triu_indices(self.n, 1))
         # Find pairwise differences for y1 and y2
         d1 = np.diff(self.method1[idx], axis=0)
         d2 = np.diff(self.method2[idx], axis=0)
@@ -241,7 +240,7 @@ class PassingBablok(Regressor):
             slope = math.sqrt(S[n // 2 + k] * S[n // 2 + k + 1])
 
         ci = st.norm.ppf((self.CI + 1) * 0.5) * math.sqrt(
-            m * (m - 1) * (2 * m + 5) / 18
+            self.n * (self.n - 1) * (2 * self.n + 5) / 18
         )
         m1 = int((n - ci) // 2)
         m2 = n - m1 + 1
@@ -275,6 +274,32 @@ class Deming(Regressor):
             Regressor keyword arguments
         """
         super().__init__(method1, method2, CI, **kwargs)
+
+    def calculate(self):
+        """Calculate regression parameters."""
+
+        def _deming(x, y, lamb):
+            ssdx = np.var(x, ddof=1) * (self.n - 1)
+            ssdy = np.var(y, ddof=1) * (self.n - 1)
+            spdxy = np.cov(x, y)[1][1] * (self.n - 1)
+
+            beta = (
+                ssdy
+                - lamb * ssdx
+                + math.sqrt((ssdy - lamb * ssdx) ** 2 + 4 * lamb * (ssdy ** 2))
+            ) / (2 * spdxy)
+            alpha = y.mean() - beta * x.mean()
+
+            ksi = (lamb * x + beta * (y - alpha)) / (lamb + beta ** 2)
+            sigmax = lamb * ((x - ksi) ** 2).sum() + (
+                (y - alpha - beta * ksi) ** 2
+            ).sum() / ((self.n - 2) * beta)
+            sigmay = math.sqrt(lamb * sigmax)
+            sigmax = math.sqrt(sigmax)
+
+            return alpha, beta, sigmax, sigmay
+
+        pass
 
 
 class Linear(Regressor):
