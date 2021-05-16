@@ -10,7 +10,7 @@ import pytest
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from methcomp.regressor import Linear
+    from methcomp.regressor import Linear, PassingBablok
 
 
 @pytest.fixture
@@ -52,6 +52,19 @@ def test_check_params(method1, method2):
     with pytest.raises(ValueError):
         Linear(method1, method2, -100)
 
+@pytest.mark.parametrize(
+    "CI, s, slo, shi, i, ilo, ihi",
+    [
+        (0.90, 1.00527774, 0.9875    , 1.02384615, 0.00986148, -0.27153846,  0.11375   ),
+        (0.95, 1.00527774, 0.98461538, 1.03      , 0.00986148, -0.33      ,  0.14115385),
+        (0.99, 1.00527774, 0.97222222, 1.03888889, 0.00986148, -0.42333333,  0.28666667),
+    ],
+)
+def test_calc_passingbablok(method1, method2, CI, s, slo, shi, i, ilo, ihi):
+    slope, intercept = PassingBablok(method1, method2, CI=CI).calculate()
+    # Expected
+    np.testing.assert_allclose(slope, (s, slo, shi), rtol=1e-5)
+    np.testing.assert_allclose(intercept, (i, ilo, ihi), rtol=1e-5)
 
 @pytest.mark.parametrize(
     "CI, s, slo, shi, i, ilo, ihi",
@@ -64,8 +77,8 @@ def test_check_params(method1, method2):
 def test_calc_linear(method1, method2, CI, s, slo, shi, i, ilo, ihi):
     slope, intercept = Linear(method1, method2, CI=CI).calculate()
     # Expected
-    np.testing.assert_allclose(slope, (s, slo, shi))
-    np.testing.assert_allclose(intercept, (i, ilo, ihi))
+    np.testing.assert_allclose(slope, (s, slo, shi), rtol=1e-5)
+    np.testing.assert_allclose(intercept, (i, ilo, ihi), rtol=1e-5)
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
