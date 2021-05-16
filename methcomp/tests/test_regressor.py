@@ -45,3 +45,32 @@ def test_plot_linear(method1, method2):
     ax = Linear(method1, method2).plot(ax=ax)
     return fig
 
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_plot_no_line_references(method1, method2):
+    fig, ax = plt.subplots(1, 1)
+    ax = Linear(method1, method2).plot(ax=ax, line_reference=False)
+    return fig
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_plot_no_line_CI(method1, method2):
+    fig, ax = plt.subplots(1, 1)
+    ax = Linear(method1, method2).plot(ax=ax, line_CI=False)
+    return fig
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_plot_no_legend(method1, method2):
+    fig, ax = plt.subplots(1, 1)
+    ax = Linear(method1, method2).plot(ax=ax, legend=False)
+    return fig
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_plot_square(method1, method2):
+    fig, ax = plt.subplots(1, 1)
+    ax = Linear(method1, method2).plot(ax=ax, square=True)
+    return fig
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_plot_noaxis(method1, method2):
+    # Cover case where ax must be created
+    ax = Linear(method1, method2).plot()
+    return plt.gcf()
