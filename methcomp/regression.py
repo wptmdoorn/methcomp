@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.stats as st
-import statsmodels.api as sm
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import statsmodels.api as sm
 import math
 import numpy as np
 
