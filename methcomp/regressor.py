@@ -9,6 +9,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
+import statsmodels.api as sm
 
 
 class Regressor(ABC):
@@ -47,6 +48,7 @@ class Regressor(ABC):
         self.method2 = np.asarray(method2)
         self.CI = CI
         self._check_params()
+        self.n = len(self.method1)
 
     def _check_params(self):
         """Check validity of parameters
@@ -58,12 +60,16 @@ class Regressor(ABC):
         """
         if self.method1.shape != self.method2.shape:
             raise ValueError("Length of method 1 and method 2 are not equal.")
+
         if self.CI is not None and (self.CI > 1 or self.CI < 0):
             raise ValueError("Confidence interval must be between 0 and 1.")
 
     @abstractmethod
     def calculate(self):
         """Calculate regression parameters.
+
+        slope and intercept are
+        [value, ci_lower, ci_upper]
 
         Note: Must set self.slope and self.intercept
         """
@@ -122,7 +128,7 @@ class Regressor(ABC):
         if ax is None:
             ax = plt.gca()
 
-        #
+        # Set scatter plot keywords to defaults and apply override
         pkws = self.DEFAULT_POINT_KWS.copy()
         pkws.update(point_kws or {})
 
@@ -240,12 +246,9 @@ class PassingBablok(Regressor):
         m1 = int((n - ci) // 2)
         m2 = n - m1 + 1
 
-        slope = (slope, S[k + m1], S[k + m2])
-        intercept = (
-            np.median(self.method2 - slope[0] * self.method1),
-            np.median(self.method2 - slope[2] * self.method1),
-            np.median(self.method2 - slope[1] * self.method1),
-        )
+        slope = np.array((slope, S[k + m1], S[k + m2]))
+        intercept = np.median(
+            self.method2-slope[:,None]*self.method1, axis=1)[[0,2,1]]
 
         return slope, intercept
 
@@ -294,3 +297,13 @@ class Linear(Regressor):
             Regressor keyword arguments
         """
         super().__init__(method1, method2, CI, **kwargs)
+
+    def calculate(self):
+        """Calculate regression parameters."""
+        _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
+        _params = _model.params
+        _confint = _model.conf_int(alpha=self.CI)
+        intercept =  np.array((_params[0], _confint[0][0], _confint[0][1]))
+        slope = np.array((_params[1], _confint[1][0], _confint[1][1]))
+        return slope, intercept
+
