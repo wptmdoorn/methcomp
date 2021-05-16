@@ -52,12 +52,22 @@ def test_check_params(method1, method2):
     with pytest.raises(ValueError):
         Linear(method1, method2, -100)
 
+
+@pytest.mark.parametrize("model", (Linear, PassingBablok))
+def test_calc_hi_lo(method1, method2, model):
+    # Ensure result is ci_low < value < ci_high
+    slope, intercept = model(method1, method2).calculate()
+    assert slope[0]>slope[1]
+    assert slope[0]<slope[2]
+    assert intercept[0]>intercept[1]
+    assert intercept[0]<intercept[2]
+
 @pytest.mark.parametrize(
     "CI, s, slo, shi, i, ilo, ihi",
     [
-        (0.90, 1.00527774, 0.9875    , 1.02384615, 0.00986148, -0.27153846,  0.11375   ),
-        (0.95, 1.00527774, 0.98461538, 1.03      , 0.00986148, -0.33      ,  0.14115385),
-        (0.99, 1.00527774, 0.97222222, 1.03888889, 0.00986148, -0.42333333,  0.28666667),
+        (0.90, 1.00527774, 0.9875, 1.02384615, 0.00986148, -0.27153846, 0.11375),
+        (0.95, 1.00527774, 0.98461538, 1.03, 0.00986148, -0.33, 0.14115385),
+        (0.99, 1.00527774, 0.97222222, 1.03888889, 0.00986148, -0.42333333, 0.28666667),
     ],
 )
 def test_calc_passingbablok(method1, method2, CI, s, slo, shi, i, ilo, ihi):
@@ -65,6 +75,7 @@ def test_calc_passingbablok(method1, method2, CI, s, slo, shi, i, ilo, ihi):
     # Expected
     np.testing.assert_allclose(slope, (s, slo, shi), rtol=1e-5)
     np.testing.assert_allclose(intercept, (i, ilo, ihi), rtol=1e-5)
+
 
 @pytest.mark.parametrize(
     "CI, s, slo, shi, i, ilo, ihi",
