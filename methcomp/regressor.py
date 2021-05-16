@@ -198,7 +198,7 @@ class PassingBablok(Regressor):
         self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95, **kwargs
     ):
         """Construct a Passing-Bablok Regressor
-        
+
         Parameters
         ----------
         method1 : np.ndarray
@@ -247,8 +247,9 @@ class PassingBablok(Regressor):
         m2 = n - m1 + 1
 
         slope = np.array((slope, S[k + m1], S[k + m2]))
-        intercept = np.median(
-            self.method2-slope[:,None]*self.method1, axis=1)[[0,2,1]]
+        intercept = np.median(self.method2 - slope[:, None] * self.method1, axis=1)[
+            [0, 2, 1]
+        ]
 
         return slope, intercept
 
@@ -303,7 +304,6 @@ class Linear(Regressor):
         _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
         _params = _model.params
         _confint = _model.conf_int(alpha=self.CI)
-        intercept =  np.array((_params[0], _confint[0][0], _confint[0][1]))
+        intercept = np.array((_params[0], _confint[0][0], _confint[0][1]))
         slope = np.array((_params[1], _confint[1][0], _confint[1][1]))
         return slope, intercept
-
