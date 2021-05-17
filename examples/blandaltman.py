@@ -13,10 +13,15 @@ method2 = [1.03, 2.05, 2.79, 3.67,
            16.94, 18.09, 19.13, 19.54]
 
 ba = blandaltman(method1, method2, CI=.95)
+ba2 = blandaltman(method1, method2, CI=.95)
 
 # get statistics
-print(ba.statistics())
+output = ba.compute()
+print(output)
 
 # plot with some title
-ba.plot(graph_title='Test')
+ba.plot(graph_title='Test') # this directly uses the previous .compute() statement
+plt.show()
+
+ba2.plot(graph_title='Test 2') # this calls .compute() internally to compute parameters
 plt.show()

@@ -22,9 +22,8 @@ class _BlandAltman(object):
 
         # check provided parameters
         self._check_params()
-        self._derive_params()
 
-    def _derive_params(self):
+    def compute(self) -> dict:
         # perform necessary calculations and processing
         self.n: float = len(self.method1)
         self.mean: np.array = np.mean([self.method1, self.method2], axis=0)
@@ -57,6 +56,8 @@ class _BlandAltman(object):
                        'loa_upper': self.mean_diff + self.loa_sd,
                        'loa_upper_CI': self.CI_upper if self.CI else None,
                        }
+        
+        return self._output
 
     def _check_params(self):
         if len(self.method1) != len(self.method2):
@@ -71,14 +72,15 @@ class _BlandAltman(object):
         #if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
         #    raise ValueError('Axes labels arguments should be provided as a str.')
         
-    def statistics(self):
-        return self._output
-
+        
     def plot(self,
              x_title='Mean of methods', y_title='Difference between methods', graph_title=None,
              reference=False, xlim=None, ylim=None,
              color_mean='#008bff', color_loa='#FF7000', color_points='#000000', point_kws=None,
              ax: matplotlib.axes.Axes=None):
+        
+        if not(hasattr(self, '_output')):
+            self.compute()
         
         point_kws: dict = {} if point_kws is None else point_kws.copy()
         ax = plt.gca()
