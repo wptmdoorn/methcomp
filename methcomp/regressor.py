@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 
-"""Implementation of regressors."""
+"""Implementation of regressors.
+"""
 from abc import ABC, abstractmethod
 import math
 from typing import Any, Dict, Optional
 
-import matplotlib as mpl
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 import statsmodels.api as sm
 
+from comparer import Comparer
 
-class Regressor(ABC):
+
+class Regressor(Comparer):
     """Method comparison regression baseclass.
 
     Attributes
@@ -23,10 +26,6 @@ class Regressor(ABC):
         Default keywords for method value scatter plot
     DEFAULT_REGRESSION_KWS : Dict[str, Any]
         Default keywords for regression line
-    method1 : np.ndarray
-        Values for method 1
-    method2 : np.ndarray
-        Values for method 2
     """
 
     DEFAULT_POINT_KWS = {"s": 20, "alpha": 0.6, "color": "#000000"}
@@ -44,11 +43,11 @@ class Regressor(ABC):
         CI : float, optional
             The confidence interval employed in regression line (default=0.95)
         """
-        self.method1 = np.asarray(method1)
-        self.method2 = np.asarray(method2)
+        super().__init__(method1, method2, **kwargs)
+
+        # Process args
         self.CI = CI
         self._check_params()
-        self.n = len(self.method1)
 
     def _check_params(self):
         """Check validity of parameters
@@ -58,22 +57,22 @@ class Regressor(ABC):
         ValueError
             If method values are of different shape or CI outside of range 0,1
         """
-        if self.method1.shape != self.method2.shape:
-            raise ValueError("Length of method 1 and method 2 are not equal.")
+        super()._check_params()
 
         if self.CI is not None and (self.CI > 1 or self.CI < 0):
             raise ValueError("Confidence interval must be between 0 and 1.")
 
     @abstractmethod
-    def calculate(self):
+    def calculate(self) -> Tuple[np.array]:
         """Calculate regression parameters.
 
-        slope and intercept are
-        [value, ci_lower, ci_upper]
+        Fill in contents to self.result, should include
+        - "slope": (value, ci_lower, ci_upper)
+        - "intercept": (value, ci_lower, ci_upper)
 
         Note: Must set self.slope and self.intercept
         """
-        pass
+        super.calculate()
 
     def plot(
         self,
@@ -84,11 +83,11 @@ class Regressor(ABC):
         line_CI: bool = True,
         legend: bool = True,
         square: bool = False,
-        ax: mpl.axes.Axes = None,
+        ax: matplotlib.axes.Axes = None,
         point_kws: Optional[Dict] = None,
         color_regr: Optional[str] = None,
         alpha_regr: Optional[float] = None,
-    ) -> mpl.axes.Axes:
+    ) -> matplotlib.axes.Axes:
         """Plot regression result
 
         Parameters
@@ -111,29 +110,29 @@ class Regressor(ABC):
         square : bool, optional
             If True, set the Axes aspect to "equal" so each cell will be
             square-shaped. (default: True)
-        ax : mpl.axes.Axes, optional
+        ax : matplotlib.axes.Axes, optional
             matplotlib axis object, if not passed, uses gca()
         point_kws : Optional[Dict], optional
             Additional keywords to plt
-        color_regr : str, optional
+        color_regr : Optional[str], optional
             Description
-        alpha_regr : float, optional
+        alpha_regr : Optional[float], optional
             Description
 
-        Returns
-        -------
-        mpl.axes.Axes
+        No Longer Returned
+        ------------------
+        matplotlib.axes.Axes
             Axes the plot was made to
         """
-        if ax is None:
-            ax = plt.gca()
+        ax = super().plot(ax=ax)
 
         # Set scatter plot keywords to defaults and apply override
         pkws = self.DEFAULT_POINT_KWS.copy()
         pkws.update(point_kws or {})
 
-        # Compute regression parameters
-        slope, intercept = self.calculate()
+        # Get regression parameters
+        slope = self.result["slope"]
+        intercept = self.result["intercept"]
 
         # plot individual points
         ax.scatter(self.method1, self.method2, **pkws)
@@ -192,7 +191,13 @@ class Regressor(ABC):
 
 class PassingBablok(Regressor):
 
-    """Passing-Bablok Regressor"""
+    """Passing-Bablok Regressor
+
+    Attributes
+    ----------
+    result : TYPE
+        Description
+    """
 
     def __init__(
         self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95, **kwargs
@@ -212,9 +217,17 @@ class PassingBablok(Regressor):
         """
         super().__init__(method1, method2, CI, **kwargs)
 
-    def calculate(self):
-        """Calculate regression parameters."""
+    def calculate(self) -> Tuple[np.array]:
+        """Calculate regression parameters.
+
+        Returns
+        -------
+        Tuple[np.array]
+            Description
+        """
         # Define pair indices
+        super().calculate()
+
         idx = np.array(np.triu_indices(self.n, 1))
         # Find pairwise differences for y1 and y2
         d1 = np.diff(self.method1[idx], axis=0)
@@ -250,15 +263,35 @@ class PassingBablok(Regressor):
             [0, 2, 1]
         ]
 
+        self.result = {"slope": slope, "intercept": intercept}
+
         return slope, intercept
 
 
 class Deming(Regressor):
 
-    """Deming Regressor"""
+    """Deming Regressor
+
+    Attributes
+    ----------
+    bootstrap : int
+        Amount of bootstrap estimates that should be performed to acquire standard errors (and confidence
+        intervals). If None, no bootstrapping is performed.
+    sdr : float
+        The assumed known standard deviations. Parameter vr takes precedence if both are given.
+    vr : float
+        The assumed known ratio of the (residual) variance of the ys relative to that of the xs.
+    """
 
     def __init__(
-        self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95, **kwargs
+        self,
+        method1: np.ndarray,
+        method2: np.ndarray,
+        CI: float = 0.95,
+        vr: float = None,
+        sdr: float = None,
+        bootstrap: int = 1000,
+        **kwargs,
     ):
         """Construct a Deming Regressor
 
@@ -269,37 +302,91 @@ class Deming(Regressor):
         method2 : np.ndarray
             Values for method 2
         CI : float, optional
-            The confidence interval employed in regression line (default=0.95)
-        **kwargs
+            The confidence interval employed in regression line
+            [default=0.95]
+        vr : float, optional
+            The assumed known ratio of the (residual) variance of the ys relative to that of the xs.
+            [default=1]
+        sdr : float, optional
+            The assumed known standard deviations. Parameter vr takes precedence if both are given.
+            [default=1]
+        bootstrap : int
+            Amount of bootstrap estimates that should be performed to acquire standard errors (and confidence
+            intervals). If None, no bootstrapping is performed.
+            [default=1000]
+        **kwargs :
             Regressor keyword arguments
         """
         super().__init__(method1, method2, CI, **kwargs)
+        self.vr = vr
+        self.sdr = sdr
+        self.bootstrap = bootstrap
 
-    def calculate(self):
+    def _check_params(self):
+        """Check validity of parameters
+
+        Raises
+        ------
+        ValueError
+            If method values are of different shape or CI outside of range 0,1
+        """
+        super()._check_params()
+
+        if self.bootstrap is not None and self.bootstrap <= 0:
+            raise ValueError("Bootstrap must be larger than 0 or None")
+
+    def calculate(self) -> Tuple[np.array]:
         """Calculate regression parameters."""
 
-        def _deming(x, y, lamb):
-            ssdx = np.var(x, ddof=1) * (self.n - 1)
-            ssdy = np.var(y, ddof=1) * (self.n - 1)
-            spdxy = np.cov(x, y)[1][1] * (self.n - 1)
+        def deming(n, x, y, lamb):
+            axis = 1 if len(x.shape) > 1 else None
+            mx = x.mean(axis=axis, keepdims=True)
+            my = y.mean(axis=axis, keepdims=True)
+            dx = x - mx
+            dy = y - my
+            sxx = np.sum(dx * dx, axis=axis, keepdims=True)
+            syy = np.sum(dy * dy, axis=axis, keepdims=True)
+            sxy = np.sum(dx * dy, axis=axis, keepdims=True)
+            dxy = syy - lamb * sxx
+            beta = (dxy + np.sqrt(dxy * dxy + 4 * lamb * sxy * sxy)) / (2 * sxy)
+            alpha = my - beta * mx
+            xi = (lamb * x + beta * (y - alpha)) / (lamb + beta * beta)
+            dxxi = x - xi
+            dyxi = y - alpha - beta * xi
+            sigmasq = (
+                lamb * np.sum(dxxi * dxxi, axis=axis, keepdims=True)
+                + np.sum(dyxi * dyxi, axis=axis, keepdims=True)
+            ) / (2 * lamb * (n - 2))
+            sigmay = np.sqrt(lamb * sigmasq)
+            sigmax = np.sqrt(sigmasq)
+            return np.hstack((alpha, beta, sigmax, sigmay))
 
-            beta = (
-                ssdy
-                - lamb * ssdx
-                + math.sqrt((ssdy - lamb * ssdx) ** 2 + 4 * lamb * (ssdy ** 2))
-            ) / (2 * spdxy)
-            alpha = y.mean() - beta * x.mean()
+        return alpha, beta, sigmax, sigmay
 
-            ksi = (lamb * x + beta * (y - alpha)) / (lamb + beta ** 2)
-            sigmax = lamb * ((x - ksi) ** 2).sum() + (
-                (y - alpha - beta * ksi) ** 2
-            ).sum() / ((self.n - 2) * beta)
-            sigmay = math.sqrt(lamb * sigmax)
-            sigmax = math.sqrt(sigmax)
+        super().calculate()
 
-            return alpha, beta, sigmax, sigmay
+        _lambda = self.vr or self.sdr or 1
 
-        pass
+        if bootstrap is None:
+            params = deming(self.n, self.method1, self.method2, _lambda)
+            slope = np.array([params[0]])
+            intercept = np.array([params[1]])
+        else:
+            # Perform bootstrap evaluation
+            idx = np.random.choice(
+                len(method1), (bootstrap, len(method1)), replace=True
+            )
+            params = deming(
+                len(method1), np.take(method1, idx), np.take(method2, idx), _lambda
+            )
+            se = np.sqrt(np.var(np.cov(params.T), axis=1, ddof=1))
+            t = np.transpose(
+                np.apply_along_axis(
+                    np.quantile, 0, params, [0.5, (1 - CI) / 2, 1 - (1 - CI) / 2]
+                )
+            )
+
+        return slope, intercept
 
 
 class Linear(Regressor):
@@ -324,8 +411,10 @@ class Linear(Regressor):
         """
         super().__init__(method1, method2, CI, **kwargs)
 
-    def calculate(self):
+    def calculate(self) -> Tuple[np.array]:
         """Calculate regression parameters."""
+        super().calculate()
+
         _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
         _params = _model.params
         _confint = _model.conf_int(alpha=self.CI)
