@@ -371,7 +371,8 @@ class Deming(Regressor):
         _lambda = self.vr or self.sdr or 1
 
         if self.bootstrap is None:
-            alpha, beta, sigmax, sigmay = deming(self.n, self.method1, self.method2, _lambda)
+            # Non bootstrap evaluation - no CI computation
+            result = _deming(n, method1, method2, _lambda)[:, None]
         else:
             # Perform bootstrap evaluation
             idx = np.random.choice(
@@ -380,24 +381,26 @@ class Deming(Regressor):
             params = deming(
                 self.n, np.take(self.method1, idx), np.take(self.method2, idx), _lambda
             )
+            # Compute standard errors of each column in params
             se = np.sqrt(np.var(np.cov(params.T), axis=1, ddof=1))
+
+            # Calculate median, lower and upper CI
             t = np.transpose(
                 np.apply_along_axis(
                     np.quantile, 0, params, [0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]
                 )
             )
-            alpha = np.hstack((t[0, :], se[0]))
-            beta = np.hstack((t[1, :], se[1]))
-            sigmax = np.hstack((t[2, :], se[2]))
-            sigmay = np.hstack((t[3, :], se[3]))
+            # Add SE column to median, low ci, high ci
+            result = np.hstack((t, se[:,None]))
 
+        # Form result
         self.result = {
-            "intercept": np.asarray(alpha),
-            "slope": np.asarray(beta),
-            "sx": np.asarray(sigmax),
-            "sy": np.asarray(sigmay),
+            "intercept": result[0, :],
+            "slope": result[1, :],
+            "sx": result[2, :],
+            "sy": result[3, :],
         }
-        return beta, alpha
+        return self.result["slope"], self.result["intercept"]
 
 
 class Linear(Regressor):
