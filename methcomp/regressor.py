@@ -302,10 +302,10 @@ class Deming(Regressor):
             intervals). If None, no bootstrapping is performed.
             [default=1000]
         """
-        super().__init__(method1, method2, CI)
         self.vr = vr
         self.sdr = sdr
         self.bootstrap = bootstrap
+        super().__init__(method1, method2, CI)
 
     def _check_params(self):
         """Check validity of parameters
@@ -315,7 +315,6 @@ class Deming(Regressor):
         ValueError
             If method values are of different shape or CI outside of range 0,1
         """
-        super()._check_params()
         if self.vr is not None < 0:
             raise ValueError("vr parameter must be positive or None")
         if self.sdr is not None < 0:
@@ -349,32 +348,38 @@ class Deming(Regressor):
             sigmax = np.sqrt(sigmasq)
             return np.hstack((alpha, beta, sigmax, sigmay))
 
-        return alpha, beta, sigmax, sigmay
-
         super().calculate()
 
         _lambda = self.vr or self.sdr or 1
 
-        if bootstrap is None:
-            params = deming(self.n, self.method1, self.method2, _lambda)
-            slope = np.array([params[0]])
-            intercept = np.array([params[1]])
+        if self.bootstrap is None:
+            alpha, beta, sigmax, sigmay = deming(self.n, self.method1, self.method2, _lambda)
         else:
             # Perform bootstrap evaluation
             idx = np.random.choice(
-                len(method1), (bootstrap, len(method1)), replace=True
+                self.n, (self.bootstrap, self.n), replace=True
             )
             params = deming(
-                len(method1), np.take(method1, idx), np.take(method2, idx), _lambda
+                self.n, np.take(self.method1, idx), np.take(self.method2, idx), _lambda
             )
             se = np.sqrt(np.var(np.cov(params.T), axis=1, ddof=1))
             t = np.transpose(
                 np.apply_along_axis(
-                    np.quantile, 0, params, [0.5, (1 - CI) / 2, 1 - (1 - CI) / 2]
+                    np.quantile, 0, params, [0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]
                 )
             )
+            alpha = np.hstack((t[0, :], se[0]))
+            beta = np.hstack((t[1, :], se[1]))
+            sigmax = np.hstack((t[2, :], se[2]))
+            sigmay = np.hstack((t[3, :], se[3]))
 
-        return slope, intercept
+        self.result = {
+            "intercept": alpha,
+            "slope": beta,
+            "sx": sigmax,
+            "sy": sigmay,
+        }
+        return beta, alpha
 
 
 class Linear(Regressor):

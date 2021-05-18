@@ -10,7 +10,7 @@ import pytest
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from methcomp.regressor import Linear, PassingBablok
+    from methcomp.regressor import Linear, PassingBablok, Deming
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_check_params(method1, method2):
         Linear(method1, method2, -100)
 
 
-@pytest.mark.parametrize("model", (Linear, PassingBablok))
+@pytest.mark.parametrize("model", (Deming, Linear, PassingBablok))
 def test_calc_hi_lo(method1, method2, model):
     # Ensure result is ci_low < value < ci_high
     slope, intercept = model(method1, method2).calculate()
