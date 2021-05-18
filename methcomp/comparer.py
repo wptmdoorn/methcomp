@@ -1,6 +1,8 @@
 """Abstract comparer base class"""
 from abc import ABC, abstractmethod
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
 
 
 class Comparer(ABC):
@@ -59,7 +61,7 @@ class Comparer(ABC):
         self.calculated = True
 
     @abstractmethod
-    def plot(self, ax: matplotlib.axes.Axis):
+    def plot(self, ax: matplotlib.axes.Axes):
         """Plot calculated result.
 
         If necessary perform calculation
