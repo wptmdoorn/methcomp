@@ -53,7 +53,7 @@ class _Deming(object):
         def _deming(x, y, lamb):
             ssdx = np.var(x, ddof=1) * (self.n - 1)
             ssdy = np.var(y, ddof=1) * (self.n - 1)
-            spdxy = np.cov(x, y)[1][1] * (self.n - 1)
+            spdxy = np.cov(x, y)[1][1] * (self.n - 1) # <- wrong, this is the same as ssdy!
 
             beta = (ssdy - lamb * ssdx + math.sqrt((ssdy - lamb * ssdx) ** 2 + 4 * lamb * (ssdy ** 2))) / (
                     2 * spdxy)
@@ -61,7 +61,7 @@ class _Deming(object):
 
             ksi = (lamb * x + beta * (y - alpha)) / (lamb + beta ** 2)
             sigmax = lamb * sum((x - ksi) ** 2) + sum((y - alpha - beta * ksi) ** 2) / (
-                    (self.n - 2) * beta)
+                    (self.n - 2) * beta) # <- Should be 2*lamb*(n-2)
             sigmay = math.sqrt(lamb * sigmax)
             sigmax = math.sqrt(sigmax)
 
