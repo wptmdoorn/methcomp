@@ -325,7 +325,25 @@ class Deming(Regressor):
     def calculate(self) -> Tuple[np.array]:
         """Calculate regression parameters."""
 
-        def deming(n, x, y, lamb):
+        def deming(n:int, x: np.ndarray, y: np.ndarray, lamb: float) -> np.ndarray:
+            """Calculate deming regresison parameters
+            
+            Parameters
+            ----------
+            n : int
+                Length of data
+            x : np.ndarray
+                method 1 data
+            y : np.ndarray
+                method 2 data
+            lamb : float
+                assummed variation
+            
+            Returns
+            -------
+            np.ndarray
+                alpha, beta, sigmax, sigmay as columns in array
+            """
             axis = 1 if len(x.shape) > 1 else None
             mx = x.mean(axis=axis, keepdims=True)
             my = y.mean(axis=axis, keepdims=True)
