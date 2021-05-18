@@ -4,7 +4,7 @@
 """
 from abc import ABC, abstractmethod
 import math
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ import numpy as np
 import scipy.stats as st
 import statsmodels.api as sm
 
-from comparer import Comparer
+from .comparer import Comparer
 
 
 class Regressor(Comparer):
@@ -43,11 +43,9 @@ class Regressor(Comparer):
         CI : float, optional
             The confidence interval employed in regression line (default=0.95)
         """
-        super().__init__(method1, method2, **kwargs)
-
         # Process args
         self.CI = CI
-        self._check_params()
+        super().__init__(method1, method2)
 
     def _check_params(self):
         """Check validity of parameters
@@ -58,7 +56,6 @@ class Regressor(Comparer):
             If method values are of different shape or CI outside of range 0,1
         """
         super()._check_params()
-
         if self.CI is not None and (self.CI > 1 or self.CI < 0):
             raise ValueError("Confidence interval must be between 0 and 1.")
 
@@ -72,7 +69,7 @@ class Regressor(Comparer):
 
         Note: Must set self.slope and self.intercept
         """
-        super.calculate()
+        super().calculate()
 
     def plot(
         self,
@@ -115,14 +112,9 @@ class Regressor(Comparer):
         point_kws : Optional[Dict], optional
             Additional keywords to plt
         color_regr : Optional[str], optional
-            Description
+            color for regression line and CI area
         alpha_regr : Optional[float], optional
-            Description
-
-        No Longer Returned
-        ------------------
-        matplotlib.axes.Axes
-            Axes the plot was made to
+            alpha for regression CI area
         """
         ax = super().plot(ax=ax)
 
@@ -195,13 +187,11 @@ class PassingBablok(Regressor):
 
     Attributes
     ----------
-    result : TYPE
-        Description
+    result : Dict[str, Any]
+        regression result
     """
 
-    def __init__(
-        self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95, **kwargs
-    ):
+    def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
         """Construct a Passing-Bablok Regressor
 
         Parameters
@@ -212,10 +202,8 @@ class PassingBablok(Regressor):
             Values for method 2
         CI : float, optional
             The confidence interval employed in regression line (default=0.95)
-        **kwargs
-            Regressor keyword arguments
         """
-        super().__init__(method1, method2, CI, **kwargs)
+        super().__init__(method1, method2, CI)
 
     def calculate(self) -> Tuple[np.array]:
         """Calculate regression parameters.
@@ -291,7 +279,6 @@ class Deming(Regressor):
         vr: float = None,
         sdr: float = None,
         bootstrap: int = 1000,
-        **kwargs,
     ):
         """Construct a Deming Regressor
 
@@ -314,10 +301,8 @@ class Deming(Regressor):
             Amount of bootstrap estimates that should be performed to acquire standard errors (and confidence
             intervals). If None, no bootstrapping is performed.
             [default=1000]
-        **kwargs :
-            Regressor keyword arguments
         """
-        super().__init__(method1, method2, CI, **kwargs)
+        super().__init__(method1, method2, CI)
         self.vr = vr
         self.sdr = sdr
         self.bootstrap = bootstrap
@@ -331,9 +316,12 @@ class Deming(Regressor):
             If method values are of different shape or CI outside of range 0,1
         """
         super()._check_params()
-
+        if self.vr is not None < 0:
+            raise ValueError("vr parameter must be positive or None")
+        if self.sdr is not None < 0:
+            raise ValueError("sdr parameter must be positive or None")
         if self.bootstrap is not None and self.bootstrap <= 0:
-            raise ValueError("Bootstrap must be larger than 0 or None")
+            raise ValueError("bootstrap parameter must be postivie or None")
 
     def calculate(self) -> Tuple[np.array]:
         """Calculate regression parameters."""
@@ -393,9 +381,7 @@ class Linear(Regressor):
 
     """Linear Regressor"""
 
-    def __init__(
-        self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95, **kwargs
-    ):
+    def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
         """Construct a Linear regressor
 
         Parameters
@@ -406,10 +392,8 @@ class Linear(Regressor):
             Values for method 2
         CI : float, optional
             The confidence interval employed in regression line (default=0.95)
-        **kwargs
-            Regressor keyword arguments
         """
-        super().__init__(method1, method2, CI, **kwargs)
+        super().__init__(method1, method2, CI)
 
     def calculate(self) -> Tuple[np.array]:
         """Calculate regression parameters."""
@@ -420,4 +404,7 @@ class Linear(Regressor):
         _confint = _model.conf_int(alpha=self.CI)
         intercept = np.array((_params[0], _confint[0][0], _confint[0][1]))
         slope = np.array((_params[1], _confint[1][0], _confint[1][1]))
+
+        self.result = {"slope": slope, "intercept": intercept}
+
         return slope, intercept
