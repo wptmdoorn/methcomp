@@ -53,7 +53,7 @@ class _Deming(object):
         def _deming(x, y, lamb):
             ssdx = np.var(x, ddof=1) * (self.n - 1)
             ssdy = np.var(y, ddof=1) * (self.n - 1)
-            spdxy = np.cov(x, y)[1][1] * (self.n - 1) # <- wrong, this is the same as ssdy!
+            spdxy = np.cov(x, y)[1][1] * (self.n - 1) # NOTE: wrong, this is the same as ssdy!
 
             beta = (ssdy - lamb * ssdx + math.sqrt((ssdy - lamb * ssdx) ** 2 + 4 * lamb * (ssdy ** 2))) / (
                     2 * spdxy)
@@ -61,7 +61,7 @@ class _Deming(object):
 
             ksi = (lamb * x + beta * (y - alpha)) / (lamb + beta ** 2)
             sigmax = lamb * sum((x - ksi) ** 2) + sum((y - alpha - beta * ksi) ** 2) / (
-                    (self.n - 2) * beta) # <- Should be 2*lamb*(n-2)
+                    (self.n - 2) * beta) # NOTE: Should be 2*lamb*(n-2)
             sigmay = math.sqrt(lamb * sigmax)
             sigmax = math.sqrt(sigmax)
 
@@ -89,8 +89,13 @@ class _Deming(object):
                 idx = np.random.choice(range(self.n), self.n, replace=True)
                 _params[i] = _deming(np.take(self.method1, idx), np.take(self.method2, idx), _lambda)
 
+            # NOTE: only use of pandas is this, but np.cov(params.T) gives same result
+            # could drop pandas dependency
+            # NOTE: pd.DataFrame already has a .sem method, although it gives a different result
+            # which also can be implemented without pandas as np.sqrt(np.var(params, axis=0, ddof=1)/len(params))
             _paramsdf = pd.DataFrame(_params, columns=['alpha', 'beta', 'sigmax', 'sigmay'])
             se = np.sqrt(np.diag(np.cov(_paramsdf.cov())))
+            # NOTE: same result with np.quantile(params, axis=0, q=[0.5, (1 - CI) / 2, 1 - (1 - CI) / 2]).T
             t = np.transpose(
                 np.apply_along_axis(np.quantile, 0, _params, [0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]))
 
