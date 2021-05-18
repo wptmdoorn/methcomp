@@ -374,10 +374,10 @@ class Deming(Regressor):
             sigmay = np.hstack((t[3, :], se[3]))
 
         self.result = {
-            "intercept": alpha,
-            "slope": beta,
-            "sx": sigmax,
-            "sy": sigmay,
+            "intercept": np.asarray(alpha),
+            "slope": np.asarray(beta),
+            "sx": np.asarray(sigmax),
+            "sy": np.asarray(sigmay),
         }
         return beta, alpha
 
