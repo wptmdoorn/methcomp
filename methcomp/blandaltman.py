@@ -3,7 +3,7 @@ import matplotlib
 import matplotlib.transforms as transforms
 import numpy as np
 from scipy import stats
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Union, List
 
 __all__ = ["blandaltman"]
 
@@ -14,21 +14,30 @@ class BlandAltman:
     DEFAULT_POINTS_KWS = {"s": 20, "alpha": 0.6, "color": "#000000"}
 
     def __init__(
-        self, method1, method2, diff: str, limit_of_agreement: float, CI: float
+        self,
+        method1: Union[List[float], np.ndarray],
+        method2: Union[List[float], np.ndarray],
+        diff: str,
+        limit_of_agreement: float,
+        CI: float,
     ):
         """
+        Initialize a Bland-Altman class object. This class is center to the calculate
+        and compute functionality of a Bland-Altman comparison.
 
         Parameters
         ----------
+        method1, method2: Union[List[float], np.ndarray]
+            Values obtained from both methods, preferably provided in a np.array.
         diff : "absolute"  or "percentage"
-        The difference to display, whether it is an absolute one or a percentual one.
-        If None is provided, it defaults to absolute.
+            The difference to display, whether it is an absolute one or a percentual one.
+            If None is provided, it defaults to absolute.
         limit_of_agreement : float, optional
-        Multiples of the standard deviation to plot the limit of afgreement bounds at.
-        This defaults to 1.96.
+            Multiples of the standard deviation to plot the limit of afgreement bounds at.
+            This defaults to 1.96.
         CI : float, optional
-        The confidence interval employed in the mean difference and limit of agreement
-        lines. Defaults to 0.95.
+            The confidence interval employed in the mean difference and limit of agreement
+            lines. Defaults to 0.95.
         """
 
         # variables assignment
@@ -59,12 +68,9 @@ class BlandAltman:
         self.n: float = len(self.method1)
         self.mean: np.array = np.mean([self.method1, self.method2], axis=0)
 
-        if self.diff_method == "absolute":
-            self.diff = self.method1 - self.method2
-        elif self.diff_method == "percentage":
-            self.diff = ((self.method1 - self.method2) / self.mean) * 100
-        else:
-            self.diff = self.method1 - self.method2
+        self.diff = self.method1 - self.method2
+        if self.diff_method == "percentage":
+            self.diff = self.diff * 100 / self.mean
 
         self.mean_diff = np.mean(self.diff)
         self.sd_diff = np.std(self.diff, axis=0)

@@ -2,6 +2,7 @@ from methcomp import blandaltman
 import matplotlib.pyplot as plt
 import pytest
 import numpy as np
+from typing import Union
 
 
 @pytest.fixture
@@ -62,28 +63,28 @@ def test_blandaltman_compute(
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
-def test_blandaltman_basic():
+def test_blandaltman_basic(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2, ax=ax)
+    blandaltman(method1, method2).plot(ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
-def test_blandaltman_basic_title():
+def test_blandaltman_basic_title(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2, title="Test", ax=ax)
+    blandaltman(method1, method2).plot(graph_title="Test", ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
-def test_blandaltman_basic_without_CI():
+def test_blandaltman_basic_without_CI(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2, CI=None, ax=ax)
+    blandaltman(method1, method2, CI=None).plot(ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
-def test_blandaltman_basic_percentage():
+def test_blandaltman_basic_percentage(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2, diff="percentage", ax=ax)
+    blandaltman(method1, method2, diff="percentage").plot(ax=ax)
     return fig
