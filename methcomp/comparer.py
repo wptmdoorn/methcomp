@@ -1,4 +1,5 @@
-"""Abstract comparer base class"""
+"""Abstract comparer base class
+"""
 from typing import Any, Dict
 from abc import ABC, abstractmethod
 import numpy as np
@@ -9,7 +10,7 @@ import matplotlib.pyplot as plt
 class Comparer(ABC):
 
     """Abstract method comparison base class
-
+    
     Attributes
     ----------
     calculated : bool
@@ -26,7 +27,7 @@ class Comparer(ABC):
 
     def __init__(self, method1: np.ndarray, method2: np.ndarray):
         """Build comparer
-
+        
         Parameters
         ----------
         method1 : np.ndarray
@@ -46,7 +47,7 @@ class Comparer(ABC):
 
     def _check_params(self):
         """Check validity of parameters.
-
+        
         Raises
         ------
         ValueError
@@ -58,9 +59,9 @@ class Comparer(ABC):
     @abstractmethod
     def _calculate_impl(self):
         """Parameter calculation implementation.
-
+        
         This function fills `Comparer.result`
-
+        
         See Also
         --------
         Comparer.calculate
@@ -69,13 +70,14 @@ class Comparer(ABC):
 
     def calculate(self) -> Dict[str, Any]:
         """Calculate parameters.
-
+        
         Calls `_calculate_impl`
-
+        
         Returns
         -------
-        Dict[str, Any] : Dictionary of calculated results
-
+        Dict[str, Any]
+            Dictionary of calculated results
+        
         See Also
         --------
         Comparer._calculate_impl
@@ -84,21 +86,21 @@ class Comparer(ABC):
         self.calculated = True
         return self.result
 
-
     @abstractmethod
-    def plot(self, ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
+    def plot(self, ax: matplotlib.axes.Axes=None) -> matplotlib.axes.Axes:
         """Plot calculated result.
-
+        
         If necessary perform calculation
-
+        
         Parameters
         ----------
         ax : matplotlib.axes.Axes, optional
             matplotlib axis object, if not passed, uses gca()
-
+        
         Returns
         -------
-        matplotlib.axes.Axes : axes for plot
+        matplotlib.axes.Axes
+            axes for plot
         """
         if not self.calculated:
             self.calculate()
