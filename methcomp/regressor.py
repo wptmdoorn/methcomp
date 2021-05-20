@@ -16,7 +16,7 @@ from .comparer import Comparer
 
 class Regressor(Comparer):
     """Method comparison regression baseclass.
-
+    
     Attributes
     ----------
     CI : float
@@ -32,7 +32,7 @@ class Regressor(Comparer):
 
     def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
         """Construct a regressor.
-
+        
         Parameters
         ----------
         method1 : np.ndarray
@@ -48,7 +48,7 @@ class Regressor(Comparer):
 
     def _check_params(self):
         """Check validity of parameters
-
+        
         Raises
         ------
         ValueError
@@ -73,7 +73,7 @@ class Regressor(Comparer):
         alpha_regr: Optional[float] = None,
     ) -> matplotlib.axes.Axes:
         """Plot regression result
-
+        
         Parameters
         ----------
         x_label : str, optional
@@ -171,16 +171,31 @@ class Regressor(Comparer):
 class PassingBablok(Regressor):
 
     """Passing-Bablok Regressor
-
+    
     Attributes
     ----------
     result : Dict[str, Any]
-        regression result
+        Regression result with `slope` and `intercept`.
+        Each of these contain
+            `value`, `ci_low`, `ci_high`, and `SE`
+    
+    References
+    ----------
+    .. [passing_1983] Passing, H. and W. Bablok W. 
+                      "A New Biometrical Procedure for Testing the Equality of
+                      Measurements from Two Different Analytical Methods." 
+                      J. Clin. Chem. Clin. Biochem 21 (1983): 709-720.
+    .. [passing_1988] Bablok, W., et al. "A General Regression Procedure for 
+                      Method Transformation. Application of Linear Regression 
+                      Procedures for Method Comparison Studies in Clinical 
+                      Chemistry, Part III." Journal of clinical chemistry 
+                      and clinical biochemistry. Zeitschrift fur klinische 
+                      Chemie und klinische Biochemie 26.11 (1988): 783-790.
     """
 
     def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
         """Construct a Passing-Bablok Regressor
-
+        
         Parameters
         ----------
         method1 : np.ndarray
@@ -194,11 +209,6 @@ class PassingBablok(Regressor):
 
     def _calculate_impl(self):
         """Calculate regression parameters.
-
-        Returns
-        -------
-        Tuple[np.array]
-            Description
         """
         # Define pair indices
         idx = np.array(np.triu_indices(self.n, 1))
@@ -224,13 +234,13 @@ class PassingBablok(Regressor):
         else:
             # Use geometric mean of central 2 elements
             slope = math.sqrt(S[n // 2 + k] * S[n // 2 + k + 1])
-
+        # Compute CI
         ci = st.norm.ppf((self.CI + 1) * 0.5) * math.sqrt(
             self.n * (self.n - 1) * (2 * self.n + 5) / 18
         )
         m1 = int((n - ci) // 2)
         m2 = n - m1 + 1
-
+        # Make slope and intercept as value, lower ci, upper ci
         slope = np.array((slope, S[k + m1], S[k + m2]))
         intercept = np.median(self.method2 - slope[:, None] * self.method1, axis=1)[
             [0, 2, 1]
@@ -241,16 +251,33 @@ class PassingBablok(Regressor):
 class Deming(Regressor):
 
     """Deming Regressor
-
+    
     Attributes
     ----------
     bootstrap : int
-        Amount of bootstrap estimates that should be performed to acquire standard errors (and confidence
-        intervals). If None, no bootstrapping is performed.
+        Amount of bootstrap estimates that should be performed to acquire 
+        standard errors (and confidence intervals). 
+    result : Dict[str, Any]
+        Regression result with 
+            `slope`, `intercept`, `sx`, and `sy`
+        if bootstrap > 0 each of these contain
+            `value`, `ci_low`, `ci_high`, and `SE`
+    
     sdr : float
-        The assumed known standard deviations. Parameter vr takes precedence if both are given.
+        The assumed known standard deviations.
     vr : float
-        The assumed known ratio of the (residual) variance of the ys relative to that of the xs.
+        The assumed known ratio of the (residual) variance of the ys relative 
+        to that of the xs.
+    
+    
+    References
+    ----------
+    .. [Koopmans_1937] Koopmans, T. C. (1937). 
+                       "Linear regression analysis of economic time series." 
+                       DeErven F. Bohn, Haarlem, Netherlands.
+    .. [Deming_1943] Deming, W. E. (1943). 
+                     "Statistical adjustment of data." 
+                     Wiley, NY (Dover Publications edition, 1985).
     """
 
     def __init__(
@@ -263,7 +290,7 @@ class Deming(Regressor):
         bootstrap: int = 1000,
     ):
         """Construct a Deming Regressor
-
+        
         Parameters
         ----------
         method1 : np.ndarray
@@ -274,14 +301,17 @@ class Deming(Regressor):
             The confidence interval employed in regression line
             [default=0.95]
         vr : float, optional
-            The assumed known ratio of the (residual) variance of the ys relative to that of the xs.
+            The assumed known ratio of the (residual) variance of the ys 
+            relative to that of the xs.
             [default=1]
         sdr : float, optional
-            The assumed known standard deviations. Parameter vr takes precedence if both are given.
+            The assumed known standard deviations. Parameter vr takes 
+            precedence if both are given.
             [default=1]
-        bootstrap : int
-            Amount of bootstrap estimates that should be performed to acquire standard errors (and confidence
-            intervals). If None, no bootstrapping is performed.
+        bootstrap : int, optional
+            Amount of bootstrap estimates that should be performed to acquire 
+            standard errors (and confidence intervals). If None, no bootstrap 
+            is performed.
             [default=1000]
         """
         self.vr = vr
@@ -291,7 +321,7 @@ class Deming(Regressor):
 
     def _check_params(self):
         """Check validity of parameters
-
+        
         Raises
         ------
         ValueError
@@ -305,11 +335,12 @@ class Deming(Regressor):
             raise ValueError("bootstrap parameter must be postivie or None")
 
     def _calculate_impl(self):
-        """Calculate regression parameters."""
+        """Calculate regression parameters.
+        """
 
         def deming(n: int, x: np.ndarray, y: np.ndarray, lamb: float) -> np.ndarray:
             """Calculate deming regresison parameters
-
+            
             Parameters
             ----------
             n : int
@@ -320,7 +351,7 @@ class Deming(Regressor):
                 method 2 data
             lamb : float
                 assummed variation
-
+            
             Returns
             -------
             np.ndarray
@@ -385,14 +416,25 @@ class Deming(Regressor):
 
 class Linear(Regressor):
 
-    """Linear Regressor"""
+    """Linear Regressor
+    
+    Attributes
+    ----------
+    result : Dict[str, Any]
+        Regression result with `slope` and `intercept` each consisting of
+            `value`, `lower ci`, and `upper ci`.
+        In addition `scipy.stats.linregress` outputs: 
+            `pvalue`, `rvalue`, `std_err`, `intercept_stderr`
+        and `t-score` for confidence interval estimation
+    
+    """
 
     def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
         """Construct a Linear regressor
-
-        Uses scipy.stats.linregress internally
-
-
+        
+        Uses `scipy.stats.linregress` internally
+        
+        
         Parameters
         ----------
         method1 : np.ndarray
@@ -405,7 +447,8 @@ class Linear(Regressor):
         super().__init__(method1, method2, CI)
 
     def _calculate_impl(self):
-        """Calculate regression parameters."""
+        """Calculate regression parameters.
+        """
 
         # Use scipy.stats.linregress
         self.result = st.linregress(self.method2, self.method1)._asdict()
