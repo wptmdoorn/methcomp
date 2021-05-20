@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Abstract comparer base class
 """
 from typing import Any, Dict
