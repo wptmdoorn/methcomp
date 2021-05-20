@@ -10,7 +10,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
-import statsmodels.api as sm
 
 from .comparer import Comparer
 
@@ -238,6 +237,7 @@ class PassingBablok(Regressor):
         ]
         self.result = {"slope": slope, "intercept": intercept}
 
+
 class Deming(Regressor):
 
     """Deming Regressor
@@ -390,6 +390,9 @@ class Linear(Regressor):
     def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
         """Construct a Linear regressor
 
+        Uses scipy.stats.linregress internally
+
+
         Parameters
         ----------
         method1 : np.ndarray
@@ -404,13 +407,35 @@ class Linear(Regressor):
     def _calculate_impl(self):
         """Calculate regression parameters."""
 
-        _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
-        _params = _model.params
-        _confint = _model.conf_int(alpha=self.CI)
-        intercept = np.array((_params[0], _confint[0][0], _confint[0][1]))
-        slope = np.array((_params[1], _confint[1][0], _confint[1][1]))
+        # Use scipy.stats.linregress
+        self.result = st.linregress(self.method2, self.method1)._asdict()
+        ts = abs(st.t.ppf((1 - self.CI) / 2, df=self.n - 2))
+        self.result.update(
+            {
+                "t-score": ts,
+            }
+        )
 
-        self.result = {
-            "slope": slope,
-            "intercept": intercept,
-        }
+        # Calculate ci width from centre
+        slope_ciw = ts * self.result["stderr"]
+        intercept_ciw = ts * self.result["intercept_stderr"]
+
+        # Put CI in slope and intercept
+        self.result.update(
+            {
+                "slope": np.array(
+                    [
+                        self.result["slope"],
+                        self.result["slope"] - slope_ciw,
+                        self.result["slope"] + slope_ciw,
+                    ]
+                ),
+                "intercept": np.array(
+                    [
+                        self.result["intercept"],
+                        self.result["intercept"] - intercept_ciw,
+                        self.result["intercept"] + intercept_ciw,
+                    ]
+                ),
+            }
+        )
