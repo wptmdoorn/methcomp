@@ -8,9 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    from methcomp.regressor import Linear, PassingBablok, Deming
+from methcomp.regressor import Linear, PassingBablok, Deming
 
 
 @pytest.fixture
@@ -56,40 +54,28 @@ def test_check_params(method1, method2):
 @pytest.mark.parametrize("model", (Deming, Linear, PassingBablok))
 def test_calc_hi_lo(method1, method2, model):
     # Ensure result is ci_low < value < ci_high
-    slope, intercept = model(method1, method2).calculate()
-    assert slope[0]>slope[1]
-    assert slope[0]<slope[2]
-    assert intercept[0]>intercept[1]
-    assert intercept[0]<intercept[2]
+    result= model(method1, method2).calculate()
+    assert result["slope"][0]>result["slope"][1]
+    assert result["slope"][0]<result["slope"][2]
+    assert result["intercept"][0]>result["intercept"][1]
+    assert result["intercept"][0]<result["intercept"][2]
 
 @pytest.mark.parametrize(
-    "CI, s, slo, shi, i, ilo, ihi",
+    "model, CI, s, slo, shi, i, ilo, ihi",
     [
-        (0.90, 1.00527774, 0.9875, 1.02384615, 0.00986148, -0.27153846, 0.11375),
-        (0.95, 1.00527774, 0.98461538, 1.03, 0.00986148, -0.33, 0.14115385),
-        (0.99, 1.00527774, 0.97222222, 1.03888889, 0.00986148, -0.42333333, 0.28666667),
+        (Linear, 0.90, 0.99253036, 0.97527739, 1.00978333, 0.09480798, -0.11193646,  0.30155242),
+        (Linear, 0.95, 0.99253036, 0.97162735, 1.01343337, 0.09480798, -0.1556753 ,  0.34529126),
+        (Linear, 0.99,  0.99253036, 0.96389147, 1.02116925, 0.09480798, -0.24837525,  0.43799121),
+        (PassingBablok, 0.90, 1.00527774, 0.9875, 1.02384615, 0.00986148, -0.27153846,  0.11375),
+        (PassingBablok, 0.95, 1.00527774, 0.98461538, 1.03, 0.00986148, -0.33      ,  0.14115385),
+        (PassingBablok, 0.99,1.00527774, 0.97222222, 1.03888889, 0.00986148, -0.42333333,  0.28666667)
     ],
 )
-def test_calc_passingbablok(method1, method2, CI, s, slo, shi, i, ilo, ihi):
-    slope, intercept = PassingBablok(method1, method2, CI=CI).calculate()
+def test_calc_linear(method1, method2, model, CI, s, slo, shi, i, ilo, ihi):
+    result = model(method1, method2, CI=CI).calculate()
     # Expected
-    np.testing.assert_allclose(slope, (s, slo, shi), rtol=1e-5)
-    np.testing.assert_allclose(intercept, (i, ilo, ihi), rtol=1e-5)
-
-
-@pytest.mark.parametrize(
-    "CI, s, slo, shi, i, ilo, ihi",
-    [
-        (0.90, 0.99253036, 0.99126234, 0.99379838, 0.09480798, 0.07961312, 0.11000284),
-        (0.95, 0.99253036, 0.99189771, 0.99316301, 0.09480798, 0.08722681, 0.10238915),
-        (0.99, 0.99253036, 0.99240391, 0.99265680, 0.09480798, 0.09329278, 0.09632318),
-    ],
-)
-def test_calc_linear(method1, method2, CI, s, slo, shi, i, ilo, ihi):
-    slope, intercept = Linear(method1, method2, CI=CI).calculate()
-    # Expected
-    np.testing.assert_allclose(slope, (s, slo, shi), rtol=1e-5)
-    np.testing.assert_allclose(intercept, (i, ilo, ihi), rtol=1e-5)
+    np.testing.assert_allclose(result["slope"], (s, slo, shi), rtol=1e-5)
+    np.testing.assert_allclose(result["intercept"], (i, ilo, ihi), rtol=1e-5)
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
