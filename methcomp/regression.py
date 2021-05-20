@@ -428,7 +428,7 @@ class _Linear(object):
         self.n = len(self.method1)
         _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
         _params = _model.params
-        _confint = _model.conf_int(alpha=self.CI)
+        _confint = _model.conf_int(alpha=self.CI) # NOTE: should be 1-self.CI
 
         self.intercept = [_confint[0][0], _params[0], _confint[0][1]]
         self.slope = [_confint[1][0], _params[1], _confint[1][1]]
