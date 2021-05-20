@@ -36,14 +36,35 @@ class Comparer(ABC):
             Values for method 2
         """
         # Process args
-        self.method1 = np.asarray(method1)
-        self.method2 = np.asarray(method2)
+        self._method1 = np.asarray(method1)
+        self._method2 = np.asarray(method2)
         self._check_params()
 
         # Additional members
         self.result = {}
-        self.calculated = False
-        self.n = len(method1)
+        self._calculated = False
+        self._n = len(method1)
+
+    @property
+    def calculated(self):
+        """True if result is calculated"""
+        return self._calculated
+
+    @property
+    def n(self):
+        """Length of method value vectors"""
+        return self._n
+
+    @property
+    def method1(self):
+        """Values for method 1"""
+        return self._method1
+
+    @property
+    def method2(self):
+        """Values for method 2"""
+        return self._method2
+
 
     def _check_params(self):
         """Check validity of parameters.
@@ -83,7 +104,7 @@ class Comparer(ABC):
         Comparer._calculate_impl
         """
         self._calculate_impl()
-        self.calculated = True
+        self._calculated = True
         return self.result
 
     @abstractmethod
@@ -104,5 +125,4 @@ class Comparer(ABC):
         """
         if not self.calculated:
             self.calculate()
-
         return ax or plt.gca()
