@@ -392,14 +392,8 @@ class Deming(Regressor):
             se = np.sqrt(np.var(np.cov(params.T), axis=1, ddof=1))
 
             # Calculate median, lower and upper CI
-            t = np.transpose(
-                np.apply_along_axis(
-                    np.quantile,
-                    0,
-                    params,
-                    [0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2],
-                )
-            )
+            # NOTE: same result with 
+            t = np.quantile(params, axis=0, q=[0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]).T
             # Add SE column to median, low ci, high ci
             result = np.hstack((t, se[:, None]))
 
