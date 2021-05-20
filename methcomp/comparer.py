@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 class Comparer(ABC):
 
-    """Abstract comparer base class
+    """Abstract method comparison base class
 
     Attributes
     ----------
@@ -19,9 +19,9 @@ class Comparer(ABC):
     method2 : np.ndarray
         Values for method 2
     n : int
-        length of method value vectors
+        Length of method value vectors
     result : dict
-        caclulation result
+        Calculation result
     """
 
     def __init__(self, method1: np.ndarray, method2: np.ndarray):
@@ -45,7 +45,7 @@ class Comparer(ABC):
         self.n = len(method1)
 
     def _check_params(self):
-        """Check validity of parameters
+        """Check validity of parameters.
 
         Raises
         ------
@@ -56,20 +56,29 @@ class Comparer(ABC):
             raise ValueError("Length of method 1 and method 2 are not equal.")
 
     @abstractmethod
-    def calculate_impl(self):
-        """Calculation implementation
+    def _calculate_impl(self):
+        """Parameter calculation implementation.
+
+        This function fills `Comparer.result`
 
         See Also
         --------
-        calculate
+        Comparer.calculate
         """
+        pass
 
     def calculate(self) -> Dict[str, Any]:
-        """Calculate regression parameters.
+        """Calculate parameters.
+
+        Calls `_calculate_impl`
 
         Returns
         -------
-        Dict[str, Any] : Dictionary of calculation results
+        Dict[str, Any] : Dictionary of calculated results
+
+        See Also
+        --------
+        Comparer._calculate_impl
         """
         self._calculate_impl()
         self.calculated = True
