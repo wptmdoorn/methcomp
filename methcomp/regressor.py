@@ -448,7 +448,7 @@ class Linear(Regressor):
         """Calculate regression parameters."""
 
         # Use scipy.stats.linregress
-        self.result = st.linregress(self.method2, self.method1)._asdict()
+        self.result = st.linregress(self.method1, self.method2)._asdict()
         ts = abs(st.t.ppf((1 - self.CI) / 2, df=self.n - 2))
         self.result.update(
             {

@@ -63,74 +63,22 @@ def test_calc_hi_lo(method1, method2, model):
 
 @pytest.mark.parametrize(
     "model, CI, s, slo, shi, i, ilo, ihi",
-    [
-        (
-            Linear,
-            0.90,
-            0.99253036,
-            0.97527739,
-            1.00978333,
-            0.09480798,
-            -0.11193646,
-            0.30155242,
-        ),
-        (
-            Linear,
-            0.95,
-            0.99253036,
-            0.97162735,
-            1.01343337,
-            0.09480798,
-            -0.1556753,
-            0.34529126,
-        ),
-        (
-            Linear,
-            0.99,
-            0.99253036,
-            0.96389147,
-            1.02116925,
-            0.09480798,
-            -0.24837525,
-            0.43799121,
-        ),
-        (
-            PassingBablok,
-            0.90,
-            1.00527774,
-            0.9875,
-            1.02384615,
-            0.00986148,
-            -0.27153846,
-            0.11375,
-        ),
-        (
-            PassingBablok,
-            0.95,
-            1.00527774,
-            0.98461538,
-            1.03,
-            0.00986148,
-            -0.33,
-            0.14115385,
-        ),
-        (
-            PassingBablok,
-            0.99,
-            1.00527774,
-            0.97222222,
-            1.03888889,
-            0.00986148,
-            -0.42333333,
-            0.28666667,
-        ),
+    [      
+        # Computed with R mcreg from mcr package
+        # Note: some internal difference makes exact comparison impossible
+        # mcreg(method1, method2, method.reg="LinReg", method.ci="analytical")
+        (Linear,  0.95, 1.00570677, 0.9845263, 1.0268873, -0.07642105, -0.3301455, 0.1773034),
+        # mcreg(method1, method2, method.reg="Deming", method.ci="bootstrap")
+        (Deming,  0.95, 1.00662190, 0.988821, 1.0259598, -0.08602996, -0.2976630, 0.1048322),
+        # mcreg(method1, method2, method.reg="PaBa", method.ci="analytical")
+        (PassingBablok, 0.95, 1.0050,  0.9848077, 1.0265805, 0.0125, -0.2975146, 0.1393271),
     ],
 )
-def test_calc_linear(method1, method2, model, CI, s, slo, shi, i, ilo, ihi):
+def test_models(method1, method2, model, CI, s, slo, shi, i, ilo, ihi):
     result = model(method1, method2, CI=CI).calculate()
     # Expected
-    np.testing.assert_allclose(result["slope"], (s, slo, shi), rtol=1e-5)
-    np.testing.assert_allclose(result["intercept"], (i, ilo, ihi), rtol=1e-5)
+    np.testing.assert_allclose(result["slope"][:3], (s, slo, shi), rtol=1e-2)
+    np.testing.assert_allclose(result["intercept"][:3], (i, ilo, ihi), atol=1e-1)
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
