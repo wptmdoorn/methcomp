@@ -63,15 +63,42 @@ def test_calc_hi_lo(method1, method2, model):
 
 @pytest.mark.parametrize(
     "model, CI, s, slo, shi, i, ilo, ihi",
-    [      
+    [
         # Computed with R mcreg from mcr package
         # Note: some internal difference makes exact comparison impossible
         # mcreg(method1, method2, method.reg="LinReg", method.ci="analytical")
-        (Linear,  0.95, 1.00570677, 0.9845263, 1.0268873, -0.07642105, -0.3301455, 0.1773034),
+        (
+            Linear,
+            0.95,
+            1.00570677,
+            0.9845263,
+            1.0268873,
+            -0.07642105,
+            -0.3301455,
+            0.1773034,
+        ),
         # mcreg(method1, method2, method.reg="Deming", method.ci="bootstrap")
-        (Deming,  0.95, 1.00662190, 0.988821, 1.0259598, -0.08602996, -0.2976630, 0.1048322),
+        (
+            Deming,
+            0.95,
+            1.00662190,
+            0.988821,
+            1.0259598,
+            -0.08602996,
+            -0.2976630,
+            0.1048322,
+        ),
         # mcreg(method1, method2, method.reg="PaBa", method.ci="analytical")
-        (PassingBablok, 0.95, 1.0050,  0.9848077, 1.0265805, 0.0125, -0.2975146, 0.1393271),
+        (
+            PassingBablok,
+            0.95,
+            1.0050,
+            0.9848077,
+            1.0265805,
+            0.0125,
+            -0.2975146,
+            0.1393271,
+        ),
     ],
 )
 def test_models(method1, method2, model, CI, s, slo, shi, i, ilo, ihi):
