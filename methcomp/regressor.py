@@ -59,18 +59,6 @@ class Regressor(Comparer):
         if self.CI is not None and (self.CI > 1 or self.CI < 0):
             raise ValueError("Confidence interval must be between 0 and 1.")
 
-    @abstractmethod
-    def calculate(self) -> Tuple[np.array]:
-        """Calculate regression parameters.
-
-        Fill in contents to self.result, should include
-        - "slope": (value, ci_lower, ci_upper)
-        - "intercept": (value, ci_lower, ci_upper)
-
-        Note: Must set self.slope and self.intercept
-        """
-        super().calculate()
-
     def plot(
         self,
         x_label: str = "Method 1",
@@ -205,7 +193,7 @@ class PassingBablok(Regressor):
         """
         super().__init__(method1, method2, CI)
 
-    def calculate(self) -> Tuple[np.array]:
+    def _calculate_impl(self):
         """Calculate regression parameters.
 
         Returns
@@ -214,8 +202,6 @@ class PassingBablok(Regressor):
             Description
         """
         # Define pair indices
-        super().calculate()
-
         idx = np.array(np.triu_indices(self.n, 1))
         # Find pairwise differences for y1 and y2
         d1 = np.diff(self.method1[idx], axis=0)
@@ -250,11 +236,7 @@ class PassingBablok(Regressor):
         intercept = np.median(self.method2 - slope[:, None] * self.method1, axis=1)[
             [0, 2, 1]
         ]
-
         self.result = {"slope": slope, "intercept": intercept}
-
-        return slope, intercept
-
 
 class Deming(Regressor):
 
@@ -322,12 +304,12 @@ class Deming(Regressor):
         if self.bootstrap is not None and self.bootstrap <= 0:
             raise ValueError("bootstrap parameter must be postivie or None")
 
-    def calculate(self) -> Tuple[np.array]:
+    def _calculate_impl(self):
         """Calculate regression parameters."""
 
-        def deming(n:int, x: np.ndarray, y: np.ndarray, lamb: float) -> np.ndarray:
+        def deming(n: int, x: np.ndarray, y: np.ndarray, lamb: float) -> np.ndarray:
             """Calculate deming regresison parameters
-            
+
             Parameters
             ----------
             n : int
@@ -338,7 +320,7 @@ class Deming(Regressor):
                 method 2 data
             lamb : float
                 assummed variation
-            
+
             Returns
             -------
             np.ndarray
@@ -366,8 +348,6 @@ class Deming(Regressor):
             sigmax = np.sqrt(sigmasq)
             return np.hstack((alpha, beta, sigmax, sigmay))
 
-        super().calculate()
-
         _lambda = self.vr or self.sdr or 1
 
         if self.bootstrap is None:
@@ -375,9 +355,7 @@ class Deming(Regressor):
             result = _deming(n, method1, method2, _lambda)[:, None]
         else:
             # Perform bootstrap evaluation
-            idx = np.random.choice(
-                self.n, (self.bootstrap, self.n), replace=True
-            )
+            idx = np.random.choice(self.n, (self.bootstrap, self.n), replace=True)
             params = deming(
                 self.n, np.take(self.method1, idx), np.take(self.method2, idx), _lambda
             )
@@ -387,11 +365,14 @@ class Deming(Regressor):
             # Calculate median, lower and upper CI
             t = np.transpose(
                 np.apply_along_axis(
-                    np.quantile, 0, params, [0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]
+                    np.quantile,
+                    0,
+                    params,
+                    [0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2],
                 )
             )
             # Add SE column to median, low ci, high ci
-            result = np.hstack((t, se[:,None]))
+            result = np.hstack((t, se[:, None]))
 
         # Form result
         self.result = {
@@ -400,7 +381,6 @@ class Deming(Regressor):
             "sx": result[2, :],
             "sy": result[3, :],
         }
-        return self.result["slope"], self.result["intercept"]
 
 
 class Linear(Regressor):
@@ -421,9 +401,8 @@ class Linear(Regressor):
         """
         super().__init__(method1, method2, CI)
 
-    def calculate(self) -> Tuple[np.array]:
+    def _calculate_impl(self):
         """Calculate regression parameters."""
-        super().calculate()
 
         _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
         _params = _model.params
@@ -431,6 +410,7 @@ class Linear(Regressor):
         intercept = np.array((_params[0], _confint[0][0], _confint[0][1]))
         slope = np.array((_params[1], _confint[1][0], _confint[1][1]))
 
-        self.result = {"slope": slope, "intercept": intercept}
-
-        return slope, intercept
+        self.result = {
+            "slope": slope,
+            "intercept": intercept,
+        }

@@ -1,4 +1,5 @@
 """Abstract comparer base class"""
+from typing import Any, Dict
 from abc import ABC, abstractmethod
 import numpy as np
 import matplotlib
@@ -55,13 +56,28 @@ class Comparer(ABC):
             raise ValueError("Length of method 1 and method 2 are not equal.")
 
     @abstractmethod
-    def calculate(self):
-        """Calculate regression parameters."""
-        self.result = {}
+    def calculate_impl(self):
+        """Calculation implementation
+
+        See Also
+        --------
+        calculate
+        """
+
+    def calculate(self) -> Dict[str, Any]:
+        """Calculate regression parameters.
+
+        Returns
+        -------
+        Dict[str, Any] : Dictionary of calculation results
+        """
+        self._calculate_impl()
         self.calculated = True
+        return self.result
+
 
     @abstractmethod
-    def plot(self, ax: matplotlib.axes.Axes):
+    def plot(self, ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
         """Plot calculated result.
 
         If necessary perform calculation
