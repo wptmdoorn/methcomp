@@ -1,540 +1,279 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-import scipy.stats as st
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import statsmodels.api as sm
-import math
+# -*- coding: utf-8 -*-
+from typing import Any, Dict, Optional, Tuple
+import matplotlib
 import numpy as np
 
 __all__ = ["deming", "passingbablok", "linear"]
+from .regressor import Deming, PassingBablok, Linear
 
 
-class _Deming(object):
-    """Internal class for drawing a Deming regression plot"""
-
-    def __init__(self, method1, method2,
-                 vr, sdr, bootstrap,
-                 x_label, y_label, title,
-                 CI, line_reference, line_CI, legend,
-                 color_points, color_deming,
-                 point_kws):
-        self.method1: np.array = np.asarray(method1)
-        self.method2: np.array = np.asarray(method2)
-        self.vr = vr
-        self.sdr = sdr
-        self.bootstrap = bootstrap
-        self.x_title = x_label
-        self.y_title = y_label
-        self.graph_title = title
-        self.color_points = color_points
-        self.color_deming = color_deming
-        self.CI = CI
-        self.line_reference = line_reference
-        self.line_CI = line_CI
-        self.legend = legend
-        self.point_kws = {} if point_kws is None else point_kws.copy()
-
-        self._check_params()
-        self._derive_params()
-
-    def _check_params(self):
-        if len(self.method1) != len(self.method2):
-            raise ValueError('Length of method 1 and method 2 are not equal.')
-        if self.bootstrap is not None and not isinstance(self.bootstrap, int):
-            raise ValueError('Bootstrap argument should either be None or an integer.')
-        if self.CI is not None and (self.CI > 1 or self.CI < 0):
-            raise ValueError('Confidence interval must be between 0 and 1.')
-        if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
-            raise ValueError('Axes labels arguments should be provided as a str.')
-
-    def _derive_params(self):
-        def _deming(x, y, lamb):
-            ssdx = np.var(x, ddof=1) * (self.n - 1)
-            ssdy = np.var(y, ddof=1) * (self.n - 1)
-            spdxy = np.cov(x, y)[1][1] * (self.n - 1) # NOTE: wrong, this is the same as ssdy!
-
-            beta = (ssdy - lamb * ssdx + math.sqrt((ssdy - lamb * ssdx) ** 2 + 4 * lamb * (ssdy ** 2))) / (
-                    2 * spdxy)
-            alpha = y.mean() - beta * x.mean()
-
-            ksi = (lamb * x + beta * (y - alpha)) / (lamb + beta ** 2)
-            sigmax = lamb * sum((x - ksi) ** 2) + sum((y - alpha - beta * ksi) ** 2) / (
-                    (self.n - 2) * beta) # NOTE: Should be 2*lamb*(n-2)
-            sigmay = math.sqrt(lamb * sigmax)
-            sigmax = math.sqrt(sigmax)
-
-            return alpha, beta, sigmax, sigmay
-
-        self.n = len(self.method1)
-        if self.vr is not None:
-            _lambda = self.vr
-        elif self.sdr is not None:
-            _lambda = self.sdr
-        else:
-            _lambda = 1
-
-        params = _deming(self.method1, self.method2, _lambda)
-
-        if self.bootstrap is None:
-            self.alpha = params[0]
-            self.beta = params[1]
-            self.sigmax = params[2]
-            self.sigmay = params[3]
-        else:
-            _params = np.zeros([self.bootstrap, 4])
-
-            for i in range(self.bootstrap):
-                idx = np.random.choice(range(self.n), self.n, replace=True)
-                _params[i] = _deming(np.take(self.method1, idx), np.take(self.method2, idx), _lambda)
-
-            # NOTE: only use of pandas is this, but np.cov(params.T) gives same result
-            # could drop pandas dependency
-            # NOTE: pd.DataFrame already has a .sem method, although it gives a different result
-            # which also can be implemented without pandas as np.sqrt(np.var(params, axis=0, ddof=1)/len(params))
-            _paramsdf = pd.DataFrame(_params, columns=['alpha', 'beta', 'sigmax', 'sigmay'])
-            se = np.sqrt(np.diag(np.cov(_paramsdf.cov())))
-            # NOTE: same result with np.quantile(params, axis=0, q=[0.5, (1 - CI) / 2, 1 - (1 - CI) / 2]).T
-            t = np.transpose(
-                np.apply_along_axis(np.quantile, 0, _params, [0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]))
-
-            self.alpha = [t[0][0], se[0], t[0][1], t[0][2]]
-            self.beta = [t[1][0], se[1], t[0][1], t[0][2]]
-            self.sigmax = [t[2][0], se[2], t[0][1], t[0][2]]
-            self.sigmay = [t[3][0], se[3], t[0][1], t[0][2]]
-
-    def plot(self, ax):
-        # plot individual points
-        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points)
-
-        # plot reference line
-        if self.line_reference:
-            ax.plot([0, 1], [0, 1], label='Reference',
-                    color='grey', linestyle='--', transform=ax.transAxes)
-
-        # plot Deming-line
-        _xvals = np.array(ax.get_xlim())
-        if self.bootstrap is None:
-            _yvals = self.alpha + self.beta * _xvals
-            ax.plot(_xvals, _yvals, label=f'{self.alpha:.2f} + {self.beta:.2f} * Method 1',
-                    color=self.color_deming, linestyle='-')
-        else:
-            _yvals = [self.alpha[s] + self.beta[0] * _xvals for s in range(0, 4)]
-            ax.plot(_xvals, _yvals[0], label=f'{self.alpha[0]:.2f} + {self.beta[0]:.2f} * Method 1',
-                    color=self.color_deming, linestyle='-')
-            ax.fill_between(_xvals, _yvals[2], _yvals[3], color=self.color_deming, alpha=0.2)
-            if self.line_CI:
-                ax.plot(_xvals, _yvals[2], linestyle='--')
-                ax.plot(_xvals, _yvals[3], linestyle='--')
-
-        if self.legend:
-            ax.legend(loc='upper left', frameon=False)
-
-        ax.set_ylabel(self.y_title)
-        ax.set_xlabel(self.x_title)
-        if self.graph_title is not None:
-            ax.set_title(self.graph_title)
-
-
-def deming(method1, method2,
-           vr=None, sdr=None, bootstrap=1000,
-           x_label='Method 1', y_label='Method 2', title=None,
-           CI=0.95, line_reference=True, line_CI=False, legend=True,
-           color_points='#000000', color_deming='#008bff',
-           point_kws=None,
-           square=False, ax=None):
+def deming(
+    method1: np.ndarray,
+    method2: np.ndarray,
+    CI: float = 0.95,
+    vr: float = None,
+    sdr: float = None,
+    bootstrap: int = 1000,
+    x_label: str = "Method 1",
+    y_label: str = "Method 2",
+    title: str = None,
+    line_reference: bool = True,
+    line_CI: bool = True,
+    legend: bool = True,
+    square: bool = False,
+    ax: matplotlib.axes.Axes = None,
+    point_kws: Optional[Dict] = None,
+    color_regr: Optional[str] = None,
+    alpha_regr: Optional[float] = None,
+):
     """Provide a method comparison using Deming regression.
 
     This is an Axis-level function which will draw the Deming plot
     onto the current active Axis object unless ``ax`` is provided.
 
-
     Parameters
     ----------
-    method1, method2 : array, or list
-        Values obtained from both methods, preferably provided in a np.array.
-    vr : float
-        The assumed known ratio of the (residual) variance of the ys relative to that of the xs.
-        Defaults to 1.
-    sdr : float
-        The assumed known standard deviations. Parameter vr takes precedence if both are given.
-        Defaults to 1.
-    bootstrap : int or None
-        Amount of bootstrap estimates that should be performed to acquire standard errors (and confidence
-        intervals). If None, no bootstrapping is performed. Defaults to 1000.
-    x_label : str, optional
-        The label which is added to the X-axis. If None is provided, a standard
-        label will be added.
-    y_label : str, optional
-        The label which is added to the Y-axis. If None is provided, a standard
-        label will be added.
-    title : str, optional
-        Title of the plot. If None is provided, no title will be plotted.
+    method1 : np.ndarray
+        Values for method 1
+    method2 : np.ndarray
+        Values for method 2
     CI : float, optional
-        The confidence interval employed in Deming line. Defaults to 0.95.
+        The confidence interval employed in regression line (default=0.95)
+    vr : float, optional
+        The assumed known ratio of the (residual) variance of the ys
+        relative to that of the xs.
+        [default=1]
+    sdr : float, optional
+        The assumed known standard deviations. Parameter vr takes
+        precedence if both are given.
+        [default=1]
+    bootstrap : int, optional
+        Amount of bootstrap estimates that should be performed to acquire
+        standard errors (and confidence intervals). If None, no bootstrap
+        is performed.
+        [default=1000]
+    x_label : str, optional
+        The label which is added to the X-axis. (default: "Method 1")
+    y_label : str, optional
+        The label which is added to the Y-axis. (default: "Method 2")
+    title : str, optional
+        Title of the regression plot. If None is provided, no title will be plotted.
     line_reference : bool, optional
-        If True, a grey reference line at y=x will be plotted in the plot.
-        Defaults to true.
+        If True, a grey reference line at y=x will be plotted in the plot
+        (default: True)
     line_CI : bool, optional
         If True, dashed lines will be plotted at the boundaries of the confidence intervals.
-        Defaults to false.
+        (default: False)
     legend : bool, optional
-        If True, will provide a legend containing the computed Deming equation.
-        Defaults to true.
-    color_points : str, optional
-        Color of the individual differences that will be plotted.
-        Color should be provided in format compatible with matplotlib.
-    color_deming : str, optional
-        Color of the mean difference line that will be plotted.
-        Color should be provided in format compatible with matplotlib.
+        If True, will provide a legend containing the computed regression equation.
+        (default: True)
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be
-        square-shaped.
-    point_kws : dict of key, value mappings, optional
-        Additional keyword arguments for `plt.scatter`.
-    ax : matplotlib Axes, optional
-        Axes in which to draw the plot, otherwise use the currently-active
-        Axes.
+        square-shaped. (default: True)
+    ax : matplotlib.axes.Axes, optional
+        matplotlib axis object, if not passed, uses gca()
+    point_kws : Optional[Dict], optional
+        Additional keywords to plt
+    color_regr : Optional[str], optional
+        color for regression line and CI area
+    alpha_regr : Optional[float], optional
+        alpha for regression CI area
 
     Returns
     -------
-    ax : matplotlib Axes
-        Axes object with the Deming plot.
+    matplotlib.axes.Axes
+        axes object with the Deming regression plot
 
     See Also
     -------
-    Koopmans, T. C. (1937). Linear regression analysis of economic time series. DeErven F. Bohn, Haarlem, Netherlands.
-    Deming, W. E. (1943). Statistical adjustment of data. Wiley, NY (Dover Publications edition, 1985).
+    regressor.Deming - class that implements Deming regression and plot
     """
 
-    plotter: _Deming = _Deming(method1, method2,
-                               vr, sdr, bootstrap,
-                               x_label, y_label, title,
-                               CI, line_reference, line_CI, legend,
-                               color_points, color_deming,
-                               point_kws)
-
-    # Draw the plot and return the Axes
-    if ax is None:
-        ax = plt.gca()
-
-    if square:
-        ax.set_aspect('equal')
-
-    plotter.plot(ax)
-
-    return ax
+    return Deming(
+        method1=method1, method2=method2, CI=CI, vr=vr, sdr=sdr, bootstrap=bootstrap
+    ).plot(
+        x_label=x_label,
+        y_label=y_label,
+        title=title,
+        line_reference=line_reference,
+        line_CI=line_CI,
+        legend=legend,
+        square=square,
+        ax=ax,
+        point_kws=point_kws,
+        color_regr=color_regr,
+        alpha_regr=alpha_regr,
+    )
 
 
-class _PassingBablok(object):
-    """Internal class for drawing a Passing-Bablok regression plot"""
-
-    def __init__(self, method1, method2,
-                 x_label, y_label, title,
-                 CI, line_reference, line_CI, legend,
-                 color_points, color_paba,
-                 point_kws):
-        self.method1: np.array = np.asarray(method1)
-        self.method2: np.array = np.asarray(method2)
-        self.x_title = x_label
-        self.y_title = y_label
-        self.graph_title = title
-        self.CI = CI
-        self.color_points = color_points
-        self.color_paba = color_paba
-        self.line_reference = line_reference
-        self.line_CI = line_CI
-        self.legend = legend
-        self.point_kws = {} if point_kws is None else point_kws.copy()
-
-        self._check_params()
-        self._derive_params()
-
-    def _check_params(self):
-        if len(self.method1) != len(self.method2):
-            raise ValueError('Length of method 1 and method 2 are not equal.')
-        if self.CI is not None and (self.CI > 1 or self.CI < 0):
-            raise ValueError('Confidence interval must be between 0 and 1.')
-        if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
-            raise ValueError('Axes labels arguments should be provided as a str.')
-
-    def _derive_params(self):
-        self.n = len(self.method1)
-        self.sv = []
-
-        for i in range(self.n - 1):
-            for j in range(i + 1, self.n):
-                self.sv.append((self.method2[i] - self.method2[j]) /
-                               (self.method1[i] - self.method1[j]))
-
-        self.sv.sort()
-        n = len(self.sv)
-        k = math.floor(len([a for a in self.sv if a < 0]) / 2)
-
-        if n % 2 == 1:
-            self.slope = self.sv[int((n + 1) / 2 + k)]
-        else:
-            self.slope = math.sqrt(self.sv[int(n / 2 + k)] * self.sv[int(n / 2 + k + 1)])
-
-        _ci = st.norm.ppf(1 - (1 - self.CI) / 2) * math.sqrt((self.n * (self.n - 1) * (2 * self.n + 5)) / 18)
-        _m1 = int(round((n - _ci) / 2))
-        _m2 = n - _m1 - 1
-
-        self.slope = [self.slope, self.sv[k + _m1], self.sv[k + _m2]]
-        self.intercept = [np.median(self.method2 - self.slope[0] * self.method1),
-                          np.median(self.method2 - self.slope[1] * self.method1),
-                          np.median(self.method2 - self.slope[2] * self.method1)]
-
-    def plot(self, ax):
-        # plot individual points
-        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points,
-                   **self.point_kws)
-
-        # plot reference line
-        if self.line_reference:
-            ax.plot([0, 1], [0, 1], label='Reference',
-                    color='grey', linestyle='--', transform=ax.transAxes)
-
-        # plot PaBa-line
-        _xvals = np.array(ax.get_xlim())
-        _yvals = [self.intercept[s] + self.slope[s] * _xvals for s in range(0, 3)]
-        ax.plot(_xvals, _yvals[0], label=f'{self.intercept[0]:.2f} + {self.slope[0]:.2f} * Method 1',
-                color=self.color_paba, linestyle='-')
-        ax.fill_between(_xvals, _yvals[1], _yvals[2], color=self.color_paba, alpha=0.2)
-        if self.line_CI:
-            ax.plot(_xvals, _yvals[1], linestyle='--')
-            ax.plot(_xvals, _yvals[2], linestyle='--')
-
-        if self.legend:
-            ax.legend(loc='upper left', frameon=False)
-
-        ax.set_ylabel(self.y_title)
-        ax.set_xlabel(self.x_title)
-        if self.graph_title is not None:
-            ax.set_title(self.graph_title)
-
-
-def passingbablok(method1, method2,
-                  x_label='Method 1', y_label='Method 2', title=None,
-                  CI=0.95, line_reference=True, line_CI=False, legend=True,
-                  color_points='#000000', color_paba='#008bff',
-                  point_kws=None,
-                  square=False, ax=None):
+def passingbablok(
+    method1: np.ndarray,
+    method2: np.ndarray,
+    CI: float = 0.95,
+    x_label: str = "Method 1",
+    y_label: str = "Method 2",
+    title: str = None,
+    line_reference: bool = True,
+    line_CI: bool = True,
+    legend: bool = True,
+    square: bool = False,
+    ax: matplotlib.axes.Axes = None,
+    point_kws: Optional[Dict] = None,
+    color_regr: Optional[str] = None,
+    alpha_regr: Optional[float] = None,
+):
     """Provide a method comparison using Passing-Bablok regression.
 
     This is an Axis-level function which will draw the Passing-Bablok plot
     onto the current active Axis object unless ``ax`` is provided.
 
-
     Parameters
     ----------
-    method1, method2 : array, or list
-        Values obtained from both methods, preferably provided in a np.array.
-    x_label : str, optional
-        The label which is added to the X-axis. If None is provided, a standard
-        label will be added.
-    y_label : str, optional
-        The label which is added to the Y-axis. If None is provided, a standard
-        label will be added.
-    title : str, optional
-        Title of the Passing-Bablok plot. If None is provided, no title will be plotted.
+    method1 : np.ndarray
+        Values for method 1
+    method2 : np.ndarray
+        Values for method 2
     CI : float, optional
-        The confidence interval employed in the passing-bablok line. Defaults to 0.95.
+        The confidence interval employed in regression line (default=0.95)
+    x_label : str, optional
+        The label which is added to the X-axis. (default: "Method 1")
+    y_label : str, optional
+        The label which is added to the Y-axis. (default: "Method 2")
+    title : str, optional
+        Title of the regression plot. If None is provided, no title will be plotted.
     line_reference : bool, optional
-        If True, a grey reference line at y=x will be plotted in the plot.
-        Defaults to true.
+        If True, a grey reference line at y=x will be plotted in the plot
+        (default: True)
     line_CI : bool, optional
         If True, dashed lines will be plotted at the boundaries of the confidence intervals.
-        Defaults to false.
+        (default: False)
     legend : bool, optional
-        If True, will provide a legend containing the computed Passing-Bablok equation.
-        Defaults to true.
-    color_points : str, optional
-        Color of the individual differences that will be plotted.
-        Color should be provided in format compatible with matplotlib.
-    color_paba : str, optional
-        Color of the mean difference line that will be plotted.
-        Color should be provided in format compatible with matplotlib.
+        If True, will provide a legend containing the computed regression equation.
+        (default: True)
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be
-        square-shaped.
-    point_kws : dict of key, value mappings, optional
-        Additional keyword arguments for `plt.scatter`.
-    ax : matplotlib Axes, optional
-        Axes in which to draw the plot, otherwise use the currently-active
-        Axes.
+        square-shaped. (default: True)
+    ax : matplotlib.axes.Axes, optional
+        matplotlib axis object, if not passed, uses gca()
+    point_kws : Optional[Dict], optional
+        Additional keywords to plt
+    color_regr : Optional[str], optional
+        color for regression line and CI area
+    alpha_regr : Optional[float], optional
+        alpha for regression CI area
 
     Returns
     -------
-    ax : matplotlib Axes
-        Axes object with the Passing-Bablok plot.
+    matplotlib.axes.Axes
+        axes object with the Passing-Bablok regression plot
+
+    References
+    ----------
+    .. [passing_1983] Passing, H. and W. Bablok W.
+                      "A New Biometrical Procedure for Testing the Equality of
+                      Measurements from Two Different Analytical Methods."
+                      J. Clin. Chem. Clin. Biochem 21 (1983): 709-720.
+    .. [passing_1988] Bablok, W., et al. "A General Regression Procedure for
+                      Method Transformation. Application of Linear Regression
+                      Procedures for Method Comparison Studies in Clinical
+                      Chemistry, Part III." Journal of clinical chemistry
+                      and clinical biochemistry. Zeitschrift fur klinische
+                      Chemie und klinische Biochemie 26.11 (1988): 783-790.
 
     See Also
     -------
-    Passing H and Bablok W. J Clin Chem Clin Biochem, vol. 21, no. 11, 1983, pp. 709 - 720
+    regressor.PassingBablok - class that implements Passing-Bablok regression and plot
     """
-
-    plotter: _PassingBablok = _PassingBablok(method1, method2,
-                                             x_label, y_label, title,
-                                             CI, line_reference, line_CI, legend,
-                                             color_points, color_paba,
-                                             point_kws)
-
-    # Draw the plot and return the Axes
-    if ax is None:
-        ax = plt.gca()
-
-    if square:
-        ax.set_aspect('equal')
-
-    plotter.plot(ax)
-
-    return ax
-
-class _Linear(object):
-    """Internal class for drawing a simple, linear regression plot"""
-
-    def __init__(self, method1, method2,
-                 x_label, y_label, title,
-                 CI, line_reference, line_CI, legend,
-                 color_points, color_regr,
-                 point_kws):
-        self.method1: np.array = np.asarray(method1)
-        self.method2: np.array = np.asarray(method2)
-        self.x_title = x_label
-        self.y_title = y_label
-        self.graph_title = title
-        self.CI = CI
-        self.color_points = color_points
-        self.color_regr = color_regr
-        self.line_reference = line_reference
-        self.line_CI = line_CI
-        self.legend = legend
-        self.point_kws = {} if point_kws is None else point_kws.copy()
-
-        self._check_params()
-        self._derive_params()
-
-    def _check_params(self):
-        if len(self.method1) != len(self.method2):
-            raise ValueError('Length of method 1 and method 2 are not equal.')
-        if self.CI is not None and (self.CI > 1 or self.CI < 0):
-            raise ValueError('Confidence interval must be between 0 and 1.')
-        if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
-            raise ValueError('Axes labels arguments should be provided as a str.')
-
-    def _derive_params(self):
-        self.n = len(self.method1)
-        _model = sm.OLS(self.method1, sm.add_constant(self.method2)).fit()
-        _params = _model.params
-        _confint = _model.conf_int(alpha=self.CI) # NOTE: should be 1-self.CI
-
-        self.intercept = [_confint[0][0], _params[0], _confint[0][1]]
-        self.slope = [_confint[1][0], _params[1], _confint[1][1]]
-
-    def plot(self, ax):
-        # plot individual points
-        ax.scatter(self.method1, self.method2, s=20, alpha=0.6, color=self.color_points,
-                   **self.point_kws)
-
-        # plot reference line
-        if self.line_reference:
-            ax.plot([0, 1], [0, 1], label='Reference',
-                    color='grey', linestyle='--', transform=ax.transAxes)
-
-        # plot linear regression
-        _xvals = np.array(ax.get_xlim())
-        _yvals = [self.intercept[s] + self.slope[s] * _xvals for s in range(0, 3)]
-        ax.plot(_xvals, _yvals[0], label=f'{self.intercept[0]:.2f} + {self.slope[0]:.2f} * Method 1',
-                color=self.color_regr, linestyle='-')
-        ax.fill_between(_xvals, _yvals[1], _yvals[2], color=self.color_regr, alpha=0.2)
-        if self.line_CI:
-            ax.plot(_xvals, _yvals[1], linestyle='--')
-            ax.plot(_xvals, _yvals[2], linestyle='--')
-
-        if self.legend:
-            ax.legend(loc='upper left', frameon=False)
-
-        ax.set_ylabel(self.y_title)
-        ax.set_xlabel(self.x_title)
-        if self.graph_title is not None:
-            ax.set_title(self.graph_title)
+    return PassingBablok(method1=method1, method2=method2, CI=CI).plot(
+        x_label=x_label,
+        y_label=y_label,
+        title=title,
+        line_reference=line_reference,
+        line_CI=line_CI,
+        legend=legend,
+        square=square,
+        ax=ax,
+        point_kws=point_kws,
+        color_regr=color_regr,
+        alpha_regr=alpha_regr,
+    )
 
 
-def linear(method1, method2,
-           x_label='Method 1', y_label='Method 2', title=None,
-           CI=0.95, line_reference=True, line_CI=False, legend=True,
-           color_points='#000000', color_regr='#008bff',
-           point_kws=None,
-           square=False, ax=None):
+def linear(
+    method1: np.ndarray,
+    method2: np.ndarray,
+    CI: float = 0.95,
+    x_label: str = "Method 1",
+    y_label: str = "Method 2",
+    title: str = None,
+    line_reference: bool = True,
+    line_CI: bool = True,
+    legend: bool = True,
+    square: bool = False,
+    ax: matplotlib.axes.Axes = None,
+    point_kws: Optional[Dict] = None,
+    color_regr: Optional[str] = None,
+    alpha_regr: Optional[float] = None,
+):
     """Provide a method comparison using simple, linear regression.
 
     This is an Axis-level function which will draw the linear regression plot
     onto the current active Axis object unless ``ax`` is provided.
 
-
     Parameters
     ----------
-    method1, method2 : array, or list
-        Values obtained from both methods, preferably provided in a np.array.
-    x_label : str, optional
-        The label which is added to the X-axis. If None is provided, a standard
-        label will be added.
-    y_label : str, optional
-        The label which is added to the Y-axis. If None is provided, a standard
-        label will be added.
-    title : str, optional
-        Title of the linear regression plot. If None is provided, no title will be plotted.
+    method1 : np.ndarray
+        Values for method 1
+    method2 : np.ndarray
+        Values for method 2
     CI : float, optional
-        The confidence interval employed in the linear regression line. Defaults to 0.95.
+        The confidence interval employed in regression line (default=0.95)
+    x_label : str, optional
+        The label which is added to the X-axis. (default: "Method 1")
+    y_label : str, optional
+        The label which is added to the Y-axis. (default: "Method 2")
+    title : str, optional
+        Title of the regression plot. If None is provided, no title will be plotted.
     line_reference : bool, optional
-        If True, a grey reference line at y=x will be plotted in the plot.
-        Defaults to true.
+        If True, a grey reference line at y=x will be plotted in the plot
+        (default: True)
     line_CI : bool, optional
         If True, dashed lines will be plotted at the boundaries of the confidence intervals.
-        Defaults to false.
+        (default: False)
     legend : bool, optional
-        If True, will provide a legend containing the computed Linear regression equation.
-        Defaults to true.
-    color_points : str, optional
-        Color of the individual differences that will be plotted.
-        Color should be provided in format compatible with matplotlib.
-    color_paba : str, optional
-        Color of the mean difference line that will be plotted.
-        Color should be provided in format compatible with matplotlib.
+        If True, will provide a legend containing the computed regression equation.
+        (default: True)
     square : bool, optional
         If True, set the Axes aspect to "equal" so each cell will be
-        square-shaped.
-    point_kws : dict of key, value mappings, optional
-        Additional keyword arguments for `plt.scatter`.
-    ax : matplotlib Axes, optional
-        Axes in which to draw the plot, otherwise use the currently-active
-        Axes.
+        square-shaped. (default: True)
+    ax : matplotlib.axes.Axes, optional
+        matplotlib axis object, if not passed, uses gca()
+    point_kws : Optional[Dict], optional
+        Additional keywords to plt
+    color_regr : Optional[str], optional
+        color for regression line and CI area
+    alpha_regr : Optional[float], optional
+        alpha for regression CI area
 
     Returns
     -------
-    ax : matplotlib Axes
-        Axes object with the linear regression plot.
+    matplotlib.axes.Axes
+        axes object with the linear regression plot
 
     See Also
     -------
-    ..............
+    regressor.Linear - class that implements linear regression and plot
     """
-
-    plotter: _Linear = _Linear(method1, method2,
-                               x_label, y_label, title,
-                               CI, line_reference, line_CI, legend,
-                               color_points, color_regr,
-                               point_kws)
-
-    # Draw the plot and return the Axes
-    if ax is None:
-        ax = plt.gca()
-
-    if square:
-        ax.set_aspect('equal')
-
-    plotter.plot(ax)
-
-    return ax
+    return Linear(method1=method1, method2=method2, CI=CI).plot(
+        x_label=x_label,
+        y_label=y_label,
+        title=title,
+        line_reference=line_reference,
+        line_CI=line_CI,
+        legend=legend,
+        square=square,
+        ax=ax,
+        point_kws=point_kws,
+        color_regr=color_regr,
+        alpha_regr=alpha_regr,
+    )
