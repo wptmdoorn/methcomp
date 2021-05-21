@@ -74,6 +74,11 @@ class Comparer(ABC):
     def _check_params(self):
         """Check validity of parameters.
 
+        Note: extending classes that need to check parameters should call
+        `super()._check_params()`
+        Note: this is called from `__init__`, extending classes should
+        call `super().__init__(...)` after initialising members in `__init__`
+
         Raises
         ------
         ValueError
@@ -117,6 +122,10 @@ class Comparer(ABC):
         """Plot calculated result.
 
         If necessary perform calculation
+
+        Note: Extending classes `plot()` should call `ax = super().plot(ax=ax)`
+        to get axis and trigger computation if necessary.
+
 
         Parameters
         ----------
