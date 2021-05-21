@@ -4,7 +4,7 @@
 """
 from abc import ABC, abstractmethod
 import math
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -32,14 +32,19 @@ class Regressor(Comparer):
     DEFAULT_POINT_KWS = {"s": 20, "alpha": 0.6, "color": "#000000"}
     DEFAULT_REGRESSION_KWS = {"color": "#008bff", "alpha": 0.2}
 
-    def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
+    def __init__(
+        self,
+        method1: Union[List[float], np.ndarray],
+        method2: Union[List[float], np.ndarray],
+        CI: float = 0.95,
+    ):
         """Construct a regressor.
 
         Parameters
         ----------
-        method1 : np.ndarray
+        method1 : Union[List[float], np.ndarray]
             Values for method 1
-        method2 : np.ndarray
+        method2 : Union[List[float], np.ndarray]
             Values for method 2
         CI : float, optional
             The confidence interval employed in regression line (default=0.95)
@@ -200,14 +205,19 @@ class PassingBablok(Regressor):
                       Chemie und klinische Biochemie 26.11 (1988): 783-790.
     """
 
-    def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
+    def __init__(
+        self,
+        method1: Union[List[float], np.ndarray],
+        method2: Union[List[float], np.ndarray],
+        CI: float = 0.95,
+    ):
         """Construct a Passing-Bablok Regressor
 
         Parameters
         ----------
-        method1 : np.ndarray
+        method1 : Union[List[float], np.ndarray]
             Values for method 1
-        method2 : np.ndarray
+        method2 : Union[List[float], np.ndarray]
             Values for method 2
         CI : float, optional
             The confidence interval employed in regression line (default=0.95)
@@ -288,8 +298,8 @@ class Deming(Regressor):
 
     def __init__(
         self,
-        method1: np.ndarray,
-        method2: np.ndarray,
+        method1: Union[List[float], np.ndarray],
+        method2: Union[List[float], np.ndarray],
         CI: float = 0.95,
         vr: float = None,
         sdr: float = None,
@@ -299,9 +309,9 @@ class Deming(Regressor):
 
         Parameters
         ----------
-        method1 : np.ndarray
+        method1 : Union[List[float], np.ndarray]
             Values for method 1
-        method2 : np.ndarray
+        method2 : Union[List[float], np.ndarray]
             Values for method 2
         CI : float, optional
             The confidence interval employed in regression line
@@ -429,7 +439,12 @@ class Linear(Regressor):
 
     """
 
-    def __init__(self, method1: np.ndarray, method2: np.ndarray, CI: float = 0.95):
+    def __init__(
+        self,
+        method1: Union[List[float], np.ndarray],
+        method2: Union[List[float], np.ndarray],
+        CI: float = 0.95,
+    ):
         """Construct a Linear regressor
 
         Uses `scipy.stats.linregress` internally
@@ -437,9 +452,9 @@ class Linear(Regressor):
 
         Parameters
         ----------
-        method1 : np.ndarray
+        method1 : Union[List[float], np.ndarray]
             Values for method 1
-        method2 : np.ndarray
+        method2 : Union[List[float], np.ndarray]
             Values for method 2
         CI : float, optional
             The confidence interval employed in regression line (default=0.95)

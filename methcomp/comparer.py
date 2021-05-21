@@ -2,7 +2,7 @@
 
 """Abstract comparer base class
 """
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 from abc import ABC, abstractmethod
 import numpy as np
 import matplotlib
@@ -27,14 +27,18 @@ class Comparer(ABC):
         Calculation result
     """
 
-    def __init__(self, method1: np.ndarray, method2: np.ndarray):
+    def __init__(
+        self,
+        method1: Union[List[float], np.ndarray],
+        method2: Union[List[float], np.ndarray],
+    ):
         """Build comparer
 
         Parameters
         ----------
-        method1 : np.ndarray
+        method1 : Union[List[float], np.ndarray]
             Values for method 1
-        method2 : np.ndarray
+        method2 : Union[List[float], np.ndarray]
             Values for method 2
         """
         # Process args
