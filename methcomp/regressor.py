@@ -13,9 +13,11 @@ import scipy.stats as st
 
 from .comparer import Comparer
 
+__all__ = ["Deming", "PassingBablok", "Linear"]
+
 
 class Regressor(Comparer):
-    """Method comparison regression baseclass.
+    """Method comparison regression base class.
 
     Attributes
     ----------
@@ -102,6 +104,11 @@ class Regressor(Comparer):
             color for regression line and CI area
         alpha_regr : Optional[float], optional
             alpha for regression CI area
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            axes object with the plot
         """
         ax = super().plot(ax=ax)
 
@@ -381,7 +388,7 @@ class Deming(Regressor):
 
         if self.bootstrap is None:
             # Non bootstrap evaluation - no CI computation
-            result = _deming(n, method1, method2, _lambda)[:, None]
+            result = deming(self.n, self.method1, self.method2, _lambda)[:, None]
         else:
             # Perform bootstrap evaluation
             idx = np.random.choice(self.n, (self.bootstrap, self.n), replace=True)
@@ -392,7 +399,9 @@ class Deming(Regressor):
             se = np.sqrt(np.var(np.cov(params.T), axis=1, ddof=1))
 
             # Calculate median, lower and upper CI
-            t = np.quantile(params, axis=0, q=[0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]).T
+            t = np.quantile(
+                params, axis=0, q=[0.5, (1 - self.CI) / 2, 1 - (1 - self.CI) / 2]
+            ).T
             # Add SE column to median, low ci, high ci
             result = np.hstack((t, se[:, None]))
 
