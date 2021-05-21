@@ -122,7 +122,7 @@ class Comparer(ABC):
         Returns
         -------
         matplotlib.axes.Axes
-            axes for plot
+            axes object with the plot
         """
         if not self.calculated:
             self.calculate()
