@@ -6,6 +6,7 @@ _orig_rc_params = mpl.rcParams.copy()
 # Import functions from all modules
 from .blandaltman import *
 from .regression import *
+from .regressor import *
 from .glucose import *
 
 # Define version
