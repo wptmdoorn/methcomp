@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Any, Dict, Optional, Tuple
+import warnings
 import matplotlib
 import numpy as np
 
@@ -98,6 +99,11 @@ def deming(
                      "Statistical adjustment of data."
                      Wiley, NY (Dover Publications edition, 1985).
     """
+    warnings.warn(
+        "methcomp.regression.deming is deprecated,"
+        " use methcomp.regressor.Deming instead",
+        DeprecationWarning,
+    )
 
     return Deming(
         method1=method1, method2=method2, CI=CI, vr=vr, sdr=sdr, bootstrap=bootstrap
@@ -208,6 +214,12 @@ def passingbablok(
                       and clinical biochemistry. Zeitschrift fur klinische
                       Chemie und klinische Biochemie 26.11 (1988): 783-790.
     """
+    warnings.warn(
+        "methcomp.regression.passingbablok is deprecated,"
+        " use methcomp.regressor.PassingBablok instead",
+        DeprecationWarning,
+    )
+
     return PassingBablok(method1=method1, method2=method2, CI=CI).plot(
         x_label=x_label,
         y_label=y_label,
@@ -288,6 +300,12 @@ def linear(
     -------
     regressor.Linear - class that implements linear regression and plot
     """
+    warnings.warn(
+        "methcomp.regression.linear is deprecated,"
+        " use methcomp.regressor.Linear instead",
+        DeprecationWarning,
+    )
+
     return Linear(method1=method1, method2=method2, CI=CI).plot(
         x_label=x_label,
         y_label=y_label,
