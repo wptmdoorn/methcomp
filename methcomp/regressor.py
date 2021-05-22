@@ -111,7 +111,7 @@ class Regressor(Comparer):
             alpha for regression CI area
 
         Returns
-        -------
+        ------------------
         matplotlib.axes.Axes
             axes object with the plot
         """
@@ -278,7 +278,6 @@ class Deming(Regressor):
             `slope`, `intercept`, `sx`, and `sy`
         if bootstrap > 0 each of these contain
             `value`, `ci_low`, `ci_high`, and `SE`
-
     sdr : float
         The assumed known standard deviations.
     vr : float
@@ -370,7 +369,7 @@ class Deming(Regressor):
                 assummed variation
 
             Returns
-            -------
+            ------------------
             np.ndarray
                 alpha, beta, sigmax, sigmay as columns in array
             """
