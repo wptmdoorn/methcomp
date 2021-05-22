@@ -353,7 +353,9 @@ class Deming(Regressor):
     def _calculate_impl(self):
         """Calculate regression parameters."""
 
-        def deming(n: int, x: np.ndarray, y: np.ndarray, lamb: float) -> np.ndarray:
+        def _calc_deming(
+            n: int, x: np.ndarray, y: np.ndarray, lamb: float
+        ) -> np.ndarray:
             """Calculate deming regresison parameters
 
             Parameters
@@ -398,11 +400,11 @@ class Deming(Regressor):
 
         if self.bootstrap is None:
             # Non bootstrap evaluation - no CI computation
-            result = deming(self.n, self.method1, self.method2, _lambda)[:, None]
+            result = _calc_deming(self.n, self.method1, self.method2, _lambda)[:, None]
         else:
             # Perform bootstrap evaluation
             idx = np.random.choice(self.n, (self.bootstrap, self.n), replace=True)
-            params = deming(
+            params = _calc_deming(
                 self.n, np.take(self.method1, idx), np.take(self.method2, idx), _lambda
             )
             # Compute standard errors of each column in params
