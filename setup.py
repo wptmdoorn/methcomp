@@ -23,9 +23,7 @@ INSTALL_REQUIRES = [
     "numpy>=1.17.2",
     "scipy>=1.3.1",
     "matplotlib>=3.1.2",
-    "pandas",
     "shapely",
-    "statsmodels",
     "importlib_resources ; python_version<'3.7'"
 ]
 
