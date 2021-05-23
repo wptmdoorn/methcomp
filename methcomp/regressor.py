@@ -342,6 +342,7 @@ class Deming(Regressor):
         ValueError
             If method values are of different shape or CI outside of range 0,1
         """
+        super()._check_params()
         if self.vr is not None < 0:
             raise ValueError("vr parameter must be positive or None")
         if self.sdr is not None < 0:
