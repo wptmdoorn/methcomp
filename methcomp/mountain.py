@@ -10,6 +10,29 @@ from .comparer import Comparer
 
 class Mountain(Comparer):
 
+    """Mountain plot
+    
+    Attributes
+    ----------
+    n_percentiles : TYPE
+        Description
+    result : Dict[str, Any]
+        Mountain calculation result with "mountain", "quantile", "auc", "median"
+
+    Examples
+    --------
+
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+    >>> from methcomp import mountain
+    >>> method1 = np.asarray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+    >>> method2 = np.asarray([1.03,2.05,2.79,3.67,5.00,5.82,7.16,7.69,8.53,10.38,11.11,12.17,13.47,13.83,15.15,16.12,16.94,18.09,19.13,19.54,])
+    >>> q=mountain.Mountain(method1, method2, 100)
+    >>> q.calculate()
+    >>> q.plot()
+    >>> plt.show()
+    """
+    
     def __init__(
         self,
         method1: Union[List[float], np.ndarray],
@@ -38,20 +61,41 @@ class Mountain(Comparer):
         label: str = "Method 1 - Method 2",
         title: str = None,
         ax: matplotlib.axes.Axes = None) -> matplotlib.axes.Axes:
+        """Plot mountain plot
+        
+        Parameters
+        ----------
+        xlabel : str, optional
+            The label which is added to the X-axis. (default: "Method difference")
+        ylabel : str, optional
+            The label which is added to the Y-axis. (default: "Folded CDF (%)")
+        label : str, optional
+            mountaint line legend label (default:"Method 1 - Method 2" )
+        title : str, optional
+            figure title, if none there will be no title
+            (default: None)
+        ax : matplotlib.axes.Axes, optional
+            matplotlib axis object, if not passed, uses gca()
+        
+        Returns
+        ------------------
+        matplotlib.axes.Axes
+            axes object with the plot
+        """
         ax = ax or plt.gca()
         ax.step(
             y=self.result["mountain"], 
             x=self.result["quantile"], 
             where='mid', 
             label=label)
-        ax.set(xlabel=xlabel, ylabel=ylabel)
+        ax.set(xlabel=xlabel, ylabel=ylabel, title=title or "")
         ax.axvline(self.result["median"], label=f"median={self.result['median']:.2f}", linestyle=":")
         ax.legend(title=f"AUC={self.result['auc']:.2f}")
         return ax
 
     def _check_params(self):
         """Check validity of parameters
-
+        
         Raises
         ------
         ValueError
@@ -63,7 +107,8 @@ class Mountain(Comparer):
 
 
     def _calculate_impl(self):
-        """Calculate mountain parameters."""
+        """Calculate mountain parameters.
+        """
 
         # quantile values to evaluate
         qrange=np.linspace(0, 1, self.n_percentiles)
