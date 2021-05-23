@@ -32,14 +32,14 @@ class BlandAltman:
         method1, method2: Union[List[float], np.ndarray]
             Values obtained from both methods, preferably provided in a np.array.
         diff : "absolute"  or "percentage"
-            The difference to display, whether it is an absolute one or a percentual one.
-            If None is provided, it defaults to absolute.
+            The difference to display, whether it is an absolute one or a percentual
+            one. If None is provided, it defaults to absolute.
         limit_of_agreement : float, optional
-            Multiples of the standard deviation to plot the limit of afgreement bounds at.
-            This defaults to 1.96.
+            Multiples of the standard deviation to plot the limit of afgreement bounds
+            at. This defaults to 1.96.
         CI : float, optional
-            The confidence interval employed in the mean difference and limit of agreement
-            lines. Defaults to 0.95.
+            The confidence interval employed in the mean difference and limit of
+            agreement lines. Defaults to 0.95.
         """
 
         # variables assignment
@@ -63,8 +63,9 @@ class BlandAltman:
 
         Returns
         ----------
-        Dict[str, Any] : a dictionary containing the mean and limit of agreement values and
-                         their confidence intervals
+        Dict[str, Any] :
+            Dictionary containing the mean and limit of agreement
+            values and their confidence intervals
         """
 
         self.n: float = len(self.method1)
@@ -149,7 +150,8 @@ class BlandAltman:
             The label which is added to the Y-axis. If None is provided, a standard
             label will be added.
         graph_title : str, optional
-            Title of the Bland-Altman plot. If None is provided, no title will be plotted.
+            Title of the Bland-Altman plot.
+            If None is provided, no title will be plotted.
         reference : bool, optional
             If True, a grey reference line at y=0 will be plotted in the Bland-Altman.
         xlim : list, optional
@@ -300,8 +302,11 @@ def blandaltman(
     See Also
     -------
     pyCompare package on github
-    Altman, D. G., and Bland, J. M. Series D (The Statistician), vol. 32, no. 3, 1983, pp. 307–317.
-    Altman, D. G., and Bland, J. M. Statistical Methods in Medical Research, vol. 8, no. 2, 1999, pp. 135–160.
+    [altman_1983] Altman, D. G., and Bland, J. M.
+                  Series D (The Statistician), vol. 32, no. 3, 1983, pp. 307–317.
+    [altman_1999] Altman, D. G., and Bland, J. M.
+                  Statistical Methods in Medical Research,
+                  vol. 8, no. 2, 1999, pp. 135–160.
 
     """
 
