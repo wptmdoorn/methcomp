@@ -71,7 +71,8 @@ class _Clarke(object):
 
         if self.units not in ["mmol", "mg/dl", "mgdl"]:
             raise ValueError(
-                "The provided units should be one of the following: mmol, mgdl or mg/dl."
+                "The provided units should be one of the following: "
+                "mmol, mgdl or mg/dl."
             )
 
         if any(
@@ -284,9 +285,11 @@ def clarke(
     Parameters
     ----------
     reference, test : array, or list
-        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+        Glucose values obtained from the reference and predicted methods, preferably
+        provided in a np.array.
     units : str
-        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+        The SI units which the glucose values are provided in.
+        Options: 'mmol', 'mgdl' or 'mg/dl'.
     x_label : str, optional
         The label which is added to the X-axis. If None is provided, a standard
         label will be added.
@@ -294,7 +297,8 @@ def clarke(
         The label which is added to the Y-axis. If None is provided, a standard
         label will be added.
     title : str, optional
-        Title of the Clarke error grid plot. If None is provided, no title will be plotted.
+        Title of the Clarke error grid plot. If None is provided, no title will
+        be plotted.
     xlim : list, optional
         Minimum and maximum limits for X-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
@@ -371,12 +375,14 @@ def clarkezones(reference, test, units, numeric=False):
     Parameters
     ----------
     reference, test : array, or list
-        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+        Glucose values obtained from the reference and predicted methods, preferably
+        provided in a np.array.
     units : str
-        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+        The SI units which the glucose values are provided in.
+        Options: 'mmol', 'mgdl' or 'mg/dl'.
     numeric : bool, optional
-        If this is set to true, returns integers (0 to 4) instead of characters for each of the
-        zones.
+        If this is set to true, returns integers (0 to 4) instead of characters for
+        each of the zones.
 
     Returns
     -------
@@ -463,7 +469,8 @@ class _Parkes(object):
 
         if self.units not in ["mmol", "mg/dl", "mgdl"]:
             raise ValueError(
-                "The provided units should be one of the following: mmol, mgdl or mg/dl."
+                "The provided units should be one of the following:"
+                " mmol, mgdl or mg/dl."
             )
 
         if any(
@@ -1067,12 +1074,14 @@ def parkes(
     Parameters
     ----------
     type : int
-        Parkes error grid differ for each type of diabetes. This should be either 1 or 2 corresponding
-        to the type of diabetes.
+        Parkes error grid differ for each type of diabetes. This should be either
+        1 or 2 corresponding to the type of diabetes.
     reference, test : array, or list
-        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+        Glucose values obtained from the reference and predicted methods, preferably
+        provided in a np.array.
     units : str
-        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+        The SI units which the glucose values are provided in.
+        Options: 'mmol', 'mgdl' or 'mg/dl'.
     x_label : str, optional
         The label which is added to the X-axis. If None is provided, a standard
         label will be added.
@@ -1080,7 +1089,8 @@ def parkes(
         The label which is added to the Y-axis. If None is provided, a standard
         label will be added.
     title : str, optional
-        Title of the Parkes-error grid plot. If None is provided, no title will be plotted.
+        Title of the Parkes-error grid plot. If None is provided, no title will be
+        plotted.
     xlim : list, optional
         Minimum and maximum limits for X-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
@@ -1088,13 +1098,14 @@ def parkes(
         Minimum and maximum limits for Y-axis. Should be provided as list or tuple.
         If not set, matplotlib will decide its own bounds.
     color_grid : str, optional
-        Color of the Clarke error grid lines. Defaults to #000000 which represents the black color.
+        Color of the Clarke error grid lines. Defaults to #000000 which represents
+        the black color.
     color_gridlabels : str, optional
-        Color of the grid labels (A, B, C, ..) that will be plotted. Defaults to 'auto' which colors
-        the points according to their relative zones.
+        Color of the grid labels (A, B, C, ..) that will be plotted.
+        Defaults to 'auto' which colors the points according to their relative zones.
     color_points : str, optional
-        Color of the individual differences that will be plotted. Defaults to 'auto' which colors
-        the points according to their relative zones.
+        Color of the individual differences that will be plotted. Defaults to 'auto'
+        which colors the points according to their relative zones.
     grid : bool, optional
         Enable the grid lines of the Parkes error. Defaults to True.
     percentage : bool, optional
@@ -1114,10 +1125,12 @@ def parkes(
     ax : matplotlib Axes
         Axes object with the Parkes error grid plot.
 
-    See Also
-    -------
-    Parkes, J. L., Slatin S. L. et al. Diabetes Care, vol. 23, no. 8, 2000, pp. 1143-1148.
-    Pfutzner, A., Klonoff D. C., et al. J Diabetes Sci Technol, vol. 7, no. 5, 2013, pp. 1275-1281.
+    References
+    ----------
+    [parkes_2000] Parkes, J. L., Slatin S. L. et al.
+                  Diabetes Care, vol. 23, no. 8, 2000, pp. 1143-1148.
+    [pfutzner_2013] Pfutzner, A., Klonoff D. C., et al.
+                    J Diabetes Sci Technol, vol. 7, no. 5, 2013, pp. 1275-1281.
     """
 
     plotter: _Parkes = _Parkes(
@@ -1159,15 +1172,17 @@ def parkeszones(type, reference, test, units, numeric=False):
     Parameters
     ----------
     type : int
-        Parkes error grid differ for each type of diabetes. This should be either 1 or 2 corresponding
-        to the type of diabetes.
+        Parkes error grid differ for each type of diabetes. This should be either
+        1 or 2 corresponding to the type of diabetes.
     reference, test : array, or list
-        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+        Glucose values obtained from the reference and predicted methods,
+        preferably provided in a np.array.
     units : str
-        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+        The SI units which the glucose values are provided in.
+        Options: 'mmol', 'mgdl' or 'mg/dl'.
     numeric : bool, optional
-        If this is set to true, returns integers (0 to 4) instead of characters for each of the
-        zones.
+        If this is set to true, returns integers (0 to 4) instead of characters
+        for each of the zones.
 
     Returns
     -------
@@ -1240,7 +1255,8 @@ class _SEG(object):
 
         if self.units not in ["mmol", "mg/dl", "mgdl"]:
             raise ValueError(
-                "The provided units should be one of the following: mmol, mgdl or mg/dl."
+                "The provided units should be one of the following: "
+                "mmol, mgdl or mg/dl."
             )
 
         if any(
@@ -1427,9 +1443,11 @@ def seg(
     Parameters
     ----------
     reference, test : array, or list
-        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+        Glucose values obtained from the reference and predicted methods,
+        preferably provided in a np.array.
     units : str
-        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+        The SI units which the glucose values are provided in.
+        Options: 'mmol', 'mgdl' or 'mg/dl'.
     x_label : str, optional
         The label which is added to the X-axis. If None is provided, a standard
         label will be added.
@@ -1459,10 +1477,12 @@ def seg(
     ax : matplotlib Axes
         Axes object with the Surveillance error grid plot.
 
-    See Also
-    -------
-    Klonoff, D. C., Lias, C., et al. J Diabetes Sci Technol, vol. 8, no. 4, 2014, pp 658-672.
-    Kovatchev, B. P., Wakeman, C. A., et al. J Diabetes Sci Technol, vol 8, no. 4, 2014, pp. 673-684.
+    References
+    ---------
+    [klonoff_2014] Klonoff, D. C., Lias, C., et al.
+                   J Diabetes Sci Technol, vol. 8, no. 4, 2014, pp 658-672.
+    [kovatchev_2014] Kovatchev, B. P., Wakeman, C. A., et al.
+                     J Diabetes Sci Technol, vol 8, no. 4, 2014, pp. 673-684.
     """
 
     plotter: _SEG = _SEG(
@@ -1498,9 +1518,11 @@ def segscores(reference, test, units):
     Parameters
     ----------
     reference, test : array, or list
-        Glucose values obtained from the reference and predicted methods, preferably provided in a np.array.
+        Glucose values obtained from the reference and predicted methods,
+        preferably provided in a np.array.
     units : str
-        The SI units which the glucose values are provided in. Options: 'mmol', 'mgdl' or 'mg/dl'.
+        The SI units which the glucose values are provided in.
+        Options: 'mmol', 'mgdl' or 'mg/dl'.
 
 
     Returns
