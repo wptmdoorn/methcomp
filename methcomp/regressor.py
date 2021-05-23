@@ -92,7 +92,8 @@ class Regressor(Comparer):
             If True, a grey reference line at y=x will be plotted in the plot
             (default: True)
         line_CI : bool, optional
-            If True, dashed lines will be plotted at the boundaries of the confidence intervals.
+            If True, dashed lines will be plotted at the boundaries of the confidence
+            intervals.
             (default: False)
         legend : bool, optional
             If True, will provide a legend containing the computed regression equation.
@@ -466,6 +467,13 @@ class Linear(Regressor):
 
         # Use scipy.stats.linregress
         result = st.linregress(self.method1, self.method2)._asdict()
+
+        # Hack to support scipy < 1.60
+        if "intercept_stderr" not in result:
+            result["intercept_stderr"] = result["stderr"] * np.sqrt(
+                np.var(self.method1) + self.method1.mean() ** 2
+            )
+
         ts = abs(st.t.ppf((1 - self.CI) / 2, df=self.n - 2))
         result.update(
             {
