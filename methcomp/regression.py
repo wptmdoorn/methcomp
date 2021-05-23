@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, Optional, Tuple
 import warnings
+from typing import Dict, Optional
+
 import matplotlib
 import numpy as np
 
 __all__ = ["deming", "passingbablok", "linear"]
-from .regressor import Deming, PassingBablok, Linear
+from .regressor import Deming, Linear, PassingBablok
 
 
 def deming(

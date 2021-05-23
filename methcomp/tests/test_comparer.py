@@ -2,6 +2,7 @@
 
 """Tests for comparer."""
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -17,25 +18,34 @@ def method1():
 def dummy(method1):
     class DummyComparer(Comparer):
         def _calculate_impl(self):
-            self.result["dummy"] = "dummy"
+            self._result["dummy"] = "dummy"
 
         def plot(self):
-            return super().plot()
+            # Plot should access something in result to trigger calc
+            self.result["dummy"]
+            return plt.gca()
 
     return DummyComparer(method1, method1)
 
 
 def test_comparer(dummy, method1):
     assert not dummy.calculated
-    assert len(dummy.result) == 0
+    assert len(dummy._result) == 0
     assert dummy.n == len(method1)
     assert isinstance(dummy.method1, np.ndarray)
 
 
 def test_calculate(dummy):
-    ax = dummy.plot()
+    assert not dummy.calculated
     assert dummy.calculate()
+    assert dummy.calculated
     assert dummy.result["dummy"] == "dummy"
+
+
+def test_auto_calculate(dummy):
+    assert not dummy.calculated
+    assert dummy.result["dummy"] == "dummy"
+    assert dummy.calculated
 
 
 def test_plot(dummy):

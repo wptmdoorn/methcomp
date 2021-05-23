@@ -2,30 +2,15 @@
 
 """Abstract comparer base class
 """
-from typing import Any, Dict, List, Union
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Union
+
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 
 
 class Comparer(ABC):
 
-    """Abstract method comparison base class
-
-    Attributes
-    ----------
-    calculated : bool
-        True if result is calculated
-    method1 : np.ndarray
-        Values for method 1
-    method2 : np.ndarray
-        Values for method 2
-    n : int
-        Length of method value vectors
-    result : dict
-        Calculation result
-    """
+    """Abstract method comparison base class"""
 
     def __init__(
         self,
@@ -47,29 +32,66 @@ class Comparer(ABC):
         self._check_params()
 
         # Additional members
-        self.result = {}
+        self._result: Dict[str, Any] = {}
         self._calculated = False
         self._n = len(method1)
 
     @property
-    def calculated(self):
-        """True if result is calculated"""
+    def calculated(self) -> bool:
+        """True if result is calculated
+
+        Returns
+        -------
+        vool
+            True if calculated
+        """
         return self._calculated
 
     @property
-    def n(self):
-        """Length of method value vectors"""
+    def n(self) -> int:
+        """Length of method value vectors
+
+        Returns
+        -------
+        int
+            Length of method vectors
+        """
         return self._n
 
     @property
-    def method1(self):
-        """Values for method 1"""
+    def method1(self) -> np.ndarray:
+        """Values for method 1
+
+        Returns
+        -------
+        np.ndarray
+            Values for method 1
+        """
         return self._method1
 
     @property
-    def method2(self):
-        """Values for method 2"""
+    def method2(self) -> np.ndarray:
+        """Values for method 2
+
+        Returns
+        -------
+        np.ndarray
+            Values for method 2
+        """
         return self._method2
+
+    @property
+    def result(self) -> Dict[str, Any]:
+        """Get result, calculate if necessary
+
+        Returns
+        -------
+        Dict[str, Any]
+            Calculation result
+        """
+        if not self.calculated:
+            self.calculate()
+        return self._result
 
     def _check_params(self):
         """Check validity of parameters.
@@ -115,28 +137,9 @@ class Comparer(ABC):
         """
         self._calculate_impl()
         self._calculated = True
-        return self.result
+        return self._result
 
     @abstractmethod
-    def plot(self, ax: matplotlib.axes.Axes = None) -> matplotlib.axes.Axes:
-        """Plot calculated result.
-
-        If necessary perform calculation
-
-        Note: Extending classes `plot()` should call `ax = super().plot(ax=ax)`
-        to get axis and trigger computation if necessary.
-
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes, optional
-            matplotlib axis object, if not passed, uses gca()
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            axes object with the plot
-        """
-        if not self.calculated:
-            self.calculate()
-        return ax or plt.gca()
+    def plot(self):
+        """Plot calculated result."""
+        pass

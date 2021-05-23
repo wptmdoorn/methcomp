@@ -1,9 +1,11 @@
-import matplotlib.pyplot as plt
+# -*- coding: utf-8 -*-
+from typing import Any, Dict, List, Tuple, Union
+
 import matplotlib
+import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import numpy as np
 from scipy import stats
-from typing import Tuple, Dict, Any, Union, List
 
 __all__ = ["blandaltman"]
 
@@ -129,9 +131,9 @@ class BlandAltman:
         reference: bool = False,
         xlim: Tuple = None,
         ylim: Tuple = None,
-        color_mean: int = "#008bff",
-        color_loa: int = "#FF7000",
-        color_points: int = "#000000",
+        color_mean: str = "#008bff",
+        color_loa: str = "#FF7000",
+        color_points: str = "#000000",
         point_kws: Dict = None,
         ax: matplotlib.axes.Axes = None,
     ):
