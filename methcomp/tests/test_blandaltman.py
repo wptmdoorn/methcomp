@@ -1,8 +1,9 @@
-from methcomp import blandaltman
+# -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
-import pytest
 import numpy as np
-from typing import Union
+import pytest
+
+from methcomp import blandaltman
 
 
 @pytest.fixture
@@ -37,7 +38,7 @@ def method2():
 
 
 @pytest.mark.parametrize(
-    "CI, m, mlo, mhi, l, llo, lhi, h, hlo, hhi",
+    "CI, m, mlo, mhi, l_, llo, lhi, h, hlo, hhi",
     [
         (
             0.95,
@@ -54,7 +55,7 @@ def method2():
     ],
 )
 def test_blandaltman_compute(
-    method1, method2, CI, m, mlo, mhi, l, llo, lhi, h, hlo, hhi
+    method1, method2, CI, m, mlo, mhi, l_, llo, lhi, h, hlo, hhi
 ):
     results = blandaltman(method1, method2, CI=CI).compute()
     # Expected

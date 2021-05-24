@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, Optional, Tuple
 import warnings
+from typing import Dict, Optional
+
 import matplotlib
 import numpy as np
 
 __all__ = ["deming", "passingbablok", "linear"]
-from .regressor import Deming, PassingBablok, Linear
+from .regressor import Deming, Linear, PassingBablok
 
 
 def deming(
@@ -63,7 +64,8 @@ def deming(
         If True, a grey reference line at y=x will be plotted in the plot
         (default: True)
     line_CI : bool, optional
-        If True, dashed lines will be plotted at the boundaries of the confidence intervals.
+        If True, dashed lines will be plotted at the boundaries of the confidence
+        intervals.
         (default: False)
     legend : bool, optional
         If True, will provide a legend containing the computed regression equation.
@@ -161,7 +163,8 @@ def passingbablok(
         If True, a grey reference line at y=x will be plotted in the plot
         (default: True)
     line_CI : bool, optional
-        If True, dashed lines will be plotted at the boundaries of the confidence intervals.
+        If True, dashed lines will be plotted at the boundaries of the confidence
+        intervals.
         (default: False)
     legend : bool, optional
         If True, will provide a legend containing the computed regression equation.
@@ -274,7 +277,8 @@ def linear(
         If True, a grey reference line at y=x will be plotted in the plot
         (default: True)
     line_CI : bool, optional
-        If True, dashed lines will be plotted at the boundaries of the confidence intervals.
+        If True, dashed lines will be plotted at the boundaries of the confidence
+        intervals.
         (default: False)
     legend : bool, optional
         If True, will provide a legend containing the computed regression equation.
