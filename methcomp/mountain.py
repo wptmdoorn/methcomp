@@ -34,9 +34,9 @@ class Mountain(Comparer):
         * quantile - value along difference as function of quantile
         * auc - area under curve
         * median - quantile at median
-        * median_idx - index in mountain at median
+        * mountain_median - mountain at median
         * iqr - interquantile range: index at low=50-iqr/2, high=50+iqr/2
-        * iqr_idx - index at iqr low and high
+        * mountain_iqr - mountain low and high iqr
 
     Examples
     --------
@@ -50,10 +50,10 @@ class Mountain(Comparer):
     >>>    11.11, 12.17, 13.47, 13.83, 15.15, 16.12, 16.94, 18.09, 19.13, 19.54]
     >>> method3 = [0.82, 2.09, 4.31, 4.18, 4.85, 6.01, 7.73, 7.95, 9.78, 10.07,
     >>>    11.64, 11.88, 12.90, 13.55, 14.57, 16.82, 16.95, 17.62, 18.44, 20.14]
-    >>> mountain.Mountain(method1, method2, n_percentiles=500, unit="ng/ml").plot(
-    >>>    color="blue", label="$M_1$ - $M_2$")
-    >>> mountain.Mountain(method1, method3, n_percentiles=500, unit="ng/ml").plot(
-    >>>    color="green", label="$M_1$ - $M_3$")
+    >>> mountain.Mountain(method1, method2, n_percentiles=500).plot(
+    >>>    color="blue", label="$M_1$ - $M_2$", unit="ng/ml")
+    >>> mountain.Mountain(method1, method3, n_percentiles=500).plot(
+    >>>    color="green", label="$M_1$ - $M_3$", unit="ng/ml")
     >>> plt.show()
 
     This will superimpose the comparisons by default, as plot creates it's own
@@ -80,7 +80,6 @@ class Mountain(Comparer):
         method2: Union[List[float], np.ndarray],
         n_percentiles: int = 100,
         iqr: float = 68.27,
-        unit: str = None,
     ):
         """Construct a regressor.
 
@@ -96,12 +95,9 @@ class Mountain(Comparer):
         iqr : float, optional
             Interquartile range for to show in plot. If <0 iqr will be skipped.
             (default: 90)
-        unit : str, optional
-            unit to disply for x-axis
         """
         self.n_percentiles = n_percentiles
         self.iqr = iqr
-        self.unit = unit
         # Process args
         super().__init__(method1, method2)
 
@@ -110,6 +106,7 @@ class Mountain(Comparer):
         xlabel: str = "Method difference",
         ylabel: str = "Folded CDF (%)",
         label: str = "$M_1$ -$M_2$",
+        unit: str = None,
         title: str = None,
         color: str = "blue",
         show_hline: bool = True,
@@ -127,6 +124,8 @@ class Mountain(Comparer):
             The label which is added to the Y-axis. (default: "Folded CDF (%)")
         label : str, optional
             mountaint line legend label (default:"Method 1 - Method 2" )
+        unit : str, optional
+            unit to disply for x-axis
         title : str, optional
             figure title, if none there will be no title
             (default: None)
@@ -156,9 +155,9 @@ class Mountain(Comparer):
         )
         if show_hline:
             ax.hlines(
-                self.result["mountain"][self.result["iqr_idx"][0]],
-                xmin=self.result["quantile"][self.result["iqr_idx"][0]],
-                xmax=self.result["quantile"][self.result["iqr_idx"][1]],
+                self.result["mountain_iqr"],
+                xmin=self.result["iqr"][0],
+                xmax=self.result["iqr"][1],
                 color=color,
             )
         if show_vlines:
@@ -166,7 +165,7 @@ class Mountain(Comparer):
                 self.result["median"],
                 ymin=0,
                 ymax=50,
-                label=f"median={self.result['median']:.2f} {self.unit or ''}",
+                label=f"median={self.result['median']:.2f} {unit or ''}",
                 linestyle="--",
                 color=color,
             )
@@ -175,26 +174,26 @@ class Mountain(Comparer):
                     self.result["iqr"],
                     ymin=0,
                     ymax=50 - self.iqr / 2,
-                    label=f"{self.iqr:.2f}% IQR ={self.result['iqr'][1]-self.result['iqr'][0]:.2f} {self.unit or ''}",
+                    label=f"{self.iqr:.2f}% IQR ={self.result['iqr'][1]-self.result['iqr'][0]:.2f} {unit or ''}",
                     linestyle=":",
                     color=color,
                 )
         if show_markers:
             ax.plot(
-                self.result["quantile"][self.result["median_idx"]],
-                self.result["mountain"][self.result["median_idx"]],
+                self.result["median"],
+                self.result["mountain_median"],
                 "o",
                 color=color,
             )
             if self.iqr > 0:
                 ax.plot(
-                    self.result["quantile"][self.result["iqr_idx"], None],
-                    self.result["mountain"][self.result["iqr_idx"], None],
+                    self.result["iqr"],
+                    self.result["mountain_iqr"],
                     "o",
                     color=color,
                 )
-        u = f"({self.unit})" if self.unit else ""
-        ax.set(xlabel=f"{xlabel} {u}", ylabel=ylabel, title=title or "")
+        u = f"({unit})" if unit else ""
+        ax.set(xlabel=f"{xlabel} {u}", ylabel=ylabel or None, title=title or None)
         ax.legend(loc="upper left", fontsize="medium")
 
         return ax
@@ -237,7 +236,7 @@ class Mountain(Comparer):
             "quantile": quantile,
             "auc": auc,
             "iqr": iqr,
-            "iqr_idx": iqr_idx,
+            "mountain_iqr": mountain[iqr_idx, None],
             "median": quantile[median_idx],
-            "median_idx": median_idx,
+            "mountain_median": mountain[median_idx],
         }

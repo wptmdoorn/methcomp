@@ -49,7 +49,7 @@ def test_mountain_plot(method1, method2):
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_mountain_plot_unit(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    ax = Mountain(method1, method2, unit="X").plot(ax=ax)
+    ax = Mountain(method1, method2).plot(ax=ax, unit="X")
     return fig
 
 
