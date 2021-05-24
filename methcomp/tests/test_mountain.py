@@ -60,6 +60,33 @@ def test_mountain_plot_no_iqr(method1, method2):
     return fig
 
 
+def test_mountain_median(method1, method2):
+    median = -0.04
+    m = Mountain(method1, method2)
+    assert m.result["median"] == pytest.approx(median, rel=1e-2, abs=1e-2)
+
+
+def test_mountain_auc(method1, method2):
+    auc = 18.5
+    m = Mountain(method1, method2)
+    assert m.result["auc"] == pytest.approx(auc, rel=1e-2, abs=1e-2)
+
+
+def test_mountain_iqr(method1, method2):
+    iqr = 0.47
+    m = Mountain(method1, method2)
+    assert m.result["iqr"][1] - m.result["iqr"][0] == pytest.approx(
+        iqr, rel=1e-2, abs=1e-2
+    )
+
+
+@pytest.mark.parametrize("n_percentiles", (50, 100, 1000))
+def test_mountain_n_percentiles(method1, method2, n_percentiles):
+    m = Mountain(method1, method2, n_percentiles=n_percentiles)
+    assert len(m.result["mountain"]) == n_percentiles
+    assert len(m.result["quantile"]) == n_percentiles
+
+
 def test_mountain_bad_n(method1, method2):
     with pytest.raises(ValueError):
         Mountain(method1, method2, n_percentiles=-1)
