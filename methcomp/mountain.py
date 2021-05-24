@@ -30,11 +30,13 @@ class Mountain(Comparer):
         Number of percentiles to use - more gives a smoother mountain plot
     result : Dict[str, Any]
         Mountain calculation result with keys
-        mountain - folded CDF in percent
-        quantile - value along difference as function of quantile
-        auc - area under curve
-        median - quantile at median
-        iqr - interquantile range: quantile at 50-iqr/2, 50+iqr/2
+        * mountain - folded CDF in percent
+        * quantile - value along difference as function of quantile
+        * auc - area under curve
+        * median - quantile at median
+        * median_idx - index in mountain at median
+        * iqr - interquantile range: index at low=50-iqr/2, high=50+iqr/2
+        * iqr_idx - index at iqr low and high
 
     Examples
     --------
