@@ -109,7 +109,7 @@ class Mountain(Comparer):
         self,
         xlabel: str = "Method difference",
         ylabel: str = "Folded CDF (%)",
-        label: str = "Method 1 - Method 2",
+        label: str = "$M_1$ -$M_2$",
         title: str = None,
         color: str = "blue",
         show_hline: bool = True,
@@ -170,14 +170,15 @@ class Mountain(Comparer):
                 linestyle="--",
                 color=color,
             )
-            ax.vlines(
-                self.result["iqr"],
-                ymin=0,
-                ymax=50 - self.iqr / 2,
-                label=f"{self.iqr:.2f}% IQR ={self.result['iqr'][1]-self.result['iqr'][0]:.2f} {self.unit or ''}",
-                linestyle=":",
-                color=color,
-            )
+            if self.iqr > 0:
+                ax.vlines(
+                    self.result["iqr"],
+                    ymin=0,
+                    ymax=50 - self.iqr / 2,
+                    label=f"{self.iqr:.2f}% IQR ={self.result['iqr'][1]-self.result['iqr'][0]:.2f} {self.unit or ''}",
+                    linestyle=":",
+                    color=color,
+                )
         if show_markers:
             ax.plot(
                 self.result["quantile"][self.result["median_idx"]],
@@ -185,15 +186,16 @@ class Mountain(Comparer):
                 "o",
                 color=color,
             )
-            ax.plot(
-                self.result["quantile"][self.result["iqr_idx"], None],
-                self.result["mountain"][self.result["iqr_idx"], None],
-                "o",
-                color=color,
-            )
+            if self.iqr > 0:
+                ax.plot(
+                    self.result["quantile"][self.result["iqr_idx"], None],
+                    self.result["mountain"][self.result["iqr_idx"], None],
+                    "o",
+                    color=color,
+                )
         u = f"({self.unit})" if self.unit else ""
         ax.set(xlabel=f"{xlabel} {u}", ylabel=ylabel, title=title or "")
-        ax.legend()
+        ax.legend(loc="upper left", fontsize="medium")
 
         return ax
 
