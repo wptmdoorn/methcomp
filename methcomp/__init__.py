@@ -1,13 +1,14 @@
-# Capture the original matplotlib rcParams
+# -*- coding: utf-8 -*-
 import matplotlib as mpl
 
-_orig_rc_params = mpl.rcParams.copy()
-
 # Import functions from all modules
-from .blandaltman import *
-from .regression import *
-from .regressor import *
-from .glucose import *
+from .blandaltman import blandaltman
+from .glucose import clarke, clarkezones, parkes, parkeszones, seg, segscores
+from .regression import deming, linear, passingbablok
+from .regressor import Deming, Linear, PassingBablok
+
+# Capture the original matplotlib rcParams
+_orig_rc_params = mpl.rcParams.copy()
 
 # Define version
 __version__ = "1.0.0"

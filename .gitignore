@@ -11,3 +11,5 @@ cover/
 venv/
 methcomp/tests/baseline/
 .vscode/
+.DS_Store
+.mypy_cache

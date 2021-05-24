@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019 William P.T.M. van Doorn
 
@@ -11,24 +12,24 @@ Here is some of the functionality that methcomp currently offers:
 - Method comparison for glucose sensors using Clarke and Parkes error grids.
 """
 
-DISTNAME = 'methcomp'
-MAINTAINER = 'William P.T.M. van Doorn'
-MAINTAINER_EMAIL = 'wptmdoorn@gmail.com'
-URL = 'https://github.com/wptmdoorn/methcomp'
-LICENSE = 'MIT'
-DOWNLOAD_URL = 'https://github.com/wptmdoorn/methcomp/archive/v1.0.0.tar.gz'
-VERSION = '1.0.0'
+DISTNAME = "methcomp"
+MAINTAINER = "William P.T.M. van Doorn"
+MAINTAINER_EMAIL = "wptmdoorn@gmail.com"
+URL = "https://github.com/wptmdoorn/methcomp"
+LICENSE = "MIT"
+DOWNLOAD_URL = "https://github.com/wptmdoorn/methcomp/archive/v1.0.0.tar.gz"
+VERSION = "1.0.0"
 
 INSTALL_REQUIRES = [
     "numpy>=1.17.2",
     "scipy>=1.3.1",
     "matplotlib>=3.1.2",
     "shapely",
-    "importlib_resources ; python_version<'3.7'"
+    "importlib_resources ; python_version<'3.7'",
 ]
 
 PACKAGES = [
-    'methcomp',
+    "methcomp",
 ]
 
 CLASSIFIERS = [
@@ -44,6 +45,7 @@ CLASSIFIERS = [
 
 try:
     from setuptools import setup
+
     _has_setuptools = True
 except ImportError:
     from distutils.core import setup

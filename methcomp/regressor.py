@@ -2,9 +2,8 @@
 
 """Implementation of regressors.
 """
-from abc import ABC, abstractmethod
 import math
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -93,7 +92,8 @@ class Regressor(Comparer):
             If True, a grey reference line at y=x will be plotted in the plot
             (default: True)
         line_CI : bool, optional
-            If True, dashed lines will be plotted at the boundaries of the confidence intervals.
+            If True, dashed lines will be plotted at the boundaries of the confidence
+            intervals.
             (default: False)
         legend : bool, optional
             If True, will provide a legend containing the computed regression equation.
@@ -115,7 +115,7 @@ class Regressor(Comparer):
         matplotlib.axes.Axes
             axes object with the plot
         """
-        ax = super().plot(ax=ax)
+        ax = ax or plt.gca()
 
         # Set scatter plot keywords to defaults and apply override
         pkws = self.DEFAULT_POINT_KWS.copy()
@@ -261,7 +261,7 @@ class PassingBablok(Regressor):
         intercept = np.median(self.method2 - slope[:, None] * self.method1, axis=1)[
             [0, 2, 1]
         ]
-        self.result = {"slope": slope, "intercept": intercept}
+        self._result = {"slope": slope, "intercept": intercept}
 
 
 class Deming(Regressor):
@@ -417,7 +417,7 @@ class Deming(Regressor):
             result = np.hstack((t, se[:, None]))
 
         # Form result
-        self.result = {
+        self._result = {
             "intercept": result[0, :],
             "slope": result[1, :],
             "sx": result[2, :],
@@ -466,34 +466,42 @@ class Linear(Regressor):
         """Calculate regression parameters."""
 
         # Use scipy.stats.linregress
-        self.result = st.linregress(self.method1, self.method2)._asdict()
+        result = st.linregress(self.method1, self.method2)._asdict()
+
+        # Hack to support scipy < 1.60
+        if "intercept_stderr" not in result:
+            result["intercept_stderr"] = result["stderr"] * np.sqrt(
+                np.var(self.method1) + self.method1.mean() ** 2
+            )
+
         ts = abs(st.t.ppf((1 - self.CI) / 2, df=self.n - 2))
-        self.result.update(
+        result.update(
             {
                 "t-score": ts,
             }
         )
 
         # Calculate ci width from centre
-        slope_ciw = ts * self.result["stderr"]
-        intercept_ciw = ts * self.result["intercept_stderr"]
+        slope_ciw = ts * result["stderr"]
+        intercept_ciw = ts * result["intercept_stderr"]
 
         # Put CI in slope and intercept
-        self.result.update(
+        result.update(
             {
                 "slope": np.array(
                     [
-                        self.result["slope"],
-                        self.result["slope"] - slope_ciw,
-                        self.result["slope"] + slope_ciw,
+                        result["slope"],
+                        result["slope"] - slope_ciw,
+                        result["slope"] + slope_ciw,
                     ]
                 ),
                 "intercept": np.array(
                     [
-                        self.result["intercept"],
-                        self.result["intercept"] - intercept_ciw,
-                        self.result["intercept"] + intercept_ciw,
+                        result["intercept"],
+                        result["intercept"] - intercept_ciw,
+                        result["intercept"] + intercept_ciw,
                     ]
                 ),
             }
         )
+        self._result = result

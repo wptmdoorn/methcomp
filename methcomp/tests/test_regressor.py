@@ -2,13 +2,11 @@
 
 """Tests for regressors."""
 
-import warnings
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from methcomp.regressor import Linear, PassingBablok, Deming
+from methcomp.regressor import Deming, Linear, PassingBablok
 
 
 @pytest.fixture
@@ -146,5 +144,5 @@ def test_plot_square(method1, method2):
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_plot_noaxis(method1, method2):
     # Cover case where ax must be created
-    ax = Linear(method1, method2).plot()
+    Linear(method1, method2).plot()
     return plt.gcf()
