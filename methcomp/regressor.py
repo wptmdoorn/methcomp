@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.stats as st
+from scipy.stats import linregress, norm, t
 
 from .comparer import Comparer
 
@@ -251,7 +251,7 @@ class PassingBablok(Regressor):
             # Use geometric mean of central 2 elements
             slope = math.sqrt(S[n // 2 + k] * S[n // 2 + k + 1])
         # Compute CI
-        ci = st.norm.ppf((self.CI + 1) * 0.5) * math.sqrt(
+        ci = norm.ppf((self.CI + 1) * 0.5) * math.sqrt(
             self.n * (self.n - 1) * (2 * self.n + 5) / 18
         )
         m1 = int((n - ci) // 2)
@@ -466,7 +466,7 @@ class Linear(Regressor):
         """Calculate regression parameters."""
 
         # Use scipy.stats.linregress
-        result = st.linregress(self.method1, self.method2)._asdict()
+        result = linregress(self.method1, self.method2)._asdict()
 
         # Hack to support scipy < 1.60
         if "intercept_stderr" not in result:
@@ -474,7 +474,7 @@ class Linear(Regressor):
                 np.var(self.method1) + self.method1.mean() ** 2
             )
 
-        ts = abs(st.t.ppf((1 - self.CI) / 2, df=self.n - 2))
+        ts = abs(t.ppf((1 - self.CI) / 2, df=self.n - 2))
         result.update(
             {
                 "t-score": ts,

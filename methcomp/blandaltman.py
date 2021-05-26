@@ -5,7 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import numpy as np
-from scipy import stats
+from scipy.stats import norm, t
 
 __all__ = ["blandaltman"]
 
@@ -80,13 +80,11 @@ class BlandAltman:
         self.loa_sd = self.loa * self.sd_diff
 
         if self.CI is not None:
-            self.CI_mean = stats.norm.interval(
+            self.CI_mean = norm.interval(
                 alpha=self.CI, loc=self.mean_diff, scale=self.sd_diff / np.sqrt(self.n)
             )
             se_loa = (1.71 ** 2) * ((self.sd_diff ** 2) / self.n)
-            conf_loa = np.sqrt(se_loa) * stats.t.ppf(
-                q=(1 - self.CI) / 2.0, df=self.n - 1
-            )
+            conf_loa = np.sqrt(se_loa) * t.ppf(q=(1 - self.CI) / 2.0, df=self.n - 1)
             self.CI_upper = [
                 self.mean_diff + self.loa_sd + conf_loa,
                 self.mean_diff + self.loa_sd - conf_loa,
