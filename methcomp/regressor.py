@@ -3,12 +3,16 @@
 """Implementation of regressors.
 """
 import math
+import warnings
 from typing import Dict, List, Optional, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import linregress, norm, t
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from scipy.stats import linregress, norm, t
 
 from .comparer import Comparer
 

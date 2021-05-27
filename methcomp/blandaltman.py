@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+import warnings
 from typing import Any, Dict, List, Tuple, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import numpy as np
-from scipy.stats import norm, t
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from scipy.stats import norm, t
 
 __all__ = ["blandaltman"]
 
