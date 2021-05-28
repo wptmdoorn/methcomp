@@ -2,6 +2,7 @@
 
 """Mountain plot.
 """
+import warnings
 from typing import List, Union
 
 import matplotlib
@@ -61,14 +62,14 @@ class Mountain(Comparer):
 
     References
     ----------
-    [krouwer_1995] Krouwer, Jan S., and Katherine L. Monti.
+    .. [krouwer_1995] Krouwer, Jan S., and Katherine L. Monti.
                    "A simple, graphical method to evaluate laboratory assays."
                    European journal of clinical chemistry and clinical biochemistry
                    33.8 (1995): 525-528.
-    [monti_1995] Monti, Katherine L.
+    .. [monti_1995] Monti, Katherine L.
                  "Folded empirical distribution function curves—mountain plots."
                  The American Statistician 49.4 (1995): 342-345.
-    [xue_2011] Xue, Jing-Hao, and D. Michael Titterington.
+    .. [xue_2011] Xue, Jing-Hao, and D. Michael Titterington.
                "The p-folded cumulative distribution function and the mean absolute
                deviation from the p-quantile." Statistics & probability letters
                81.8 (2011): 1179-1182.
@@ -101,14 +102,59 @@ class Mountain(Comparer):
         # Process args
         super().__init__(method1, method2)
 
+    def _check_params(self):
+        """Check validity of parameters
+
+        Raises
+        ------
+        ValueError
+            If method values are of different shape or CI outside of range 0,1
+        """
+        super()._check_params()
+        if self.n_percentiles <= 0:
+            raise ValueError(
+                "n_percentiles: Number of percentile steps should be positive"
+            )
+        if not 0 <= self.iqr <= 100:
+            raise ValueError("iqr: Interquartile range must be in [0-100]")
+
+    def _calculate_impl(self):
+        """Calculate mountain parameters."""
+
+        # quantile values to evaluate
+        qrange = np.linspace(0, 1, self.n_percentiles)
+        diff = self.method1 - self.method2
+        quantile = np.quantile(diff, qrange)
+        iqr = np.quantile(diff, [0.5 - self.iqr / 200, 0.5 + self.iqr / 200])
+        # Find id corresponding to iqr and median
+        median_idx = self.n_percentiles // 2
+        iqr_idx = np.abs(quantile - iqr[0]).argmin(), np.abs(quantile - iqr[1]).argmin()
+        # Split qrange in the middle and convert to percentile
+        mountain = np.where(qrange < 0.5, qrange, 1.0 - qrange) * 100
+        # Calcualte area under curve
+        auc = (np.diff(quantile) * (mountain[:-1] + mountain[1:]) / 2).sum()
+
+        # Build result
+        self._result = {
+            "mountain": mountain,
+            "quantile": quantile,
+            "auc": auc,
+            "iqr": iqr,
+            "mountain_iqr": mountain[iqr_idx, None],
+            "median": quantile[median_idx],
+            "mountain_median": mountain[median_idx],
+        }
+
     def plot(
         self,
         xlabel: str = "Method difference",
         ylabel: str = "Folded CDF (%)",
-        label: str = "$M_1$ -$M_2$",
+        label: str = "$M_1$ - $M_2$",
         unit: str = None,
         title: str = None,
         color: str = "blue",
+        legend: bool = True,
+        square: bool = False,
         show_hline: bool = True,
         show_vlines: bool = True,
         show_markers: bool = True,
@@ -129,6 +175,12 @@ class Mountain(Comparer):
         title : str, optional
             figure title, if none there will be no title
             (default: None)
+        legend : bool, optional
+            If True, will provide a legend containing the computed regression equation.
+            (default: True)
+        square : bool, optional
+            If True, set the Axes aspect to "equal" so each cell will be
+            square-shaped. (default: True)
         color : str, optional
             Color for mountain plot elements
         show_hline: bool, optional
@@ -174,7 +226,11 @@ class Mountain(Comparer):
                     self.result["iqr"],
                     ymin=0,
                     ymax=50 - self.iqr / 2,
-                    label=f"{self.iqr:.2f}% IQR ={self.result['iqr'][1]-self.result['iqr'][0]:.2f} {unit or ''}",
+                    label=(
+                        f"{self.iqr:.2f}% IQR ="
+                        f"{self.result['iqr'][1] - self.result['iqr'][0]:.2f}"
+                        "{unit or ''}"
+                    ),
                     linestyle=":",
                     color=color,
                 )
@@ -196,47 +252,123 @@ class Mountain(Comparer):
         ax.set(xlabel=f"{xlabel} {u}", ylabel=ylabel or None, title=title or None)
         ax.legend(loc="upper left", fontsize="medium")
 
+        if legend:
+            ax.legend(loc="upper left", frameon=False)
+
+        if square:
+            ax.set_aspect("equal")
+
         return ax
 
-    def _check_params(self):
-        """Check validity of parameters
 
-        Raises
-        ------
-        ValueError
-            If method values are of different shape or CI outside of range 0,1
-        """
-        super()._check_params()
-        if self.n_percentiles <= 0:
-            raise ValueError(
-                "n_percentiles: Number of percentile steps should be positive"
-            )
-        if not 0 <= self.iqr <= 100:
-            raise ValueError("iqr: Interquartile range must be in [0-100]")
+def mountain(
+    method1: Union[List[float], np.ndarray],
+    method2: Union[List[float], np.ndarray],
+    n_percentiles: int = 100,
+    iqr: float = 68.27,
+    xlabel: str = "Method difference",
+    ylabel: str = "Folded CDF (%)",
+    label: str = "$M_1$ - $M_2$",
+    unit: str = None,
+    title: str = None,
+    color: str = "blue",
+    legend: bool = True,
+    square: bool = False,
+    show_hline: bool = True,
+    show_vlines: bool = True,
+    show_markers: bool = True,
+    ax: matplotlib.axes.Axes = None,
+):
+    """Provide a method comparison using Mountain plot.
 
-    def _calculate_impl(self):
-        """Calculate mountain parameters."""
+    This is an Axis-level function which will draw the Deming plot
+    onto the current active Axis object unless ``ax`` is provided.
 
-        # quantile values to evaluate
-        qrange = np.linspace(0, 1, self.n_percentiles)
-        diff = self.method1 - self.method2
-        quantile = np.quantile(diff, qrange)
-        iqr = np.quantile(diff, [0.5 - self.iqr / 200, 0.5 + self.iqr / 200])
-        # Find id corresponding to iqr and median
-        median_idx = self.n_percentiles // 2
-        iqr_idx = np.abs(quantile - iqr[0]).argmin(), np.abs(quantile - iqr[1]).argmin()
-        # Split qrange in the middle and convert to percentile
-        mountain = np.where(qrange < 0.5, qrange, 1.0 - qrange) * 100
-        # Calcualte area under curve
-        auc = (np.diff(quantile) * (mountain[:-1] + mountain[1:]) / 2).sum()
+    Parameters
+    ----------
+    method1 : Union[List[float], np.ndarray]
+        Values for method 1
+    method2 : Union[List[float], np.ndarray]
+        Values for method 2
+    n_percentiles : int, optional
+        Number of percentile streps - more gives a smoother mountain plot
+        (default n=100)
+    iqr : float, optional
+        Interquartile range for to show in plot. If <0 iqr will be skipped.
+        (default: 90)
+    xlabel : str, optional
+        The label which is added to the X-axis. (default: "Method difference")
+    ylabel : str, optional
+        The label which is added to the Y-axis. (default: "Folded CDF (%)")
+    label : str, optional
+        mountaint line legend label (default:"Method 1 - Method 2" )
+    unit : str, optional
+        unit to disply for x-axis
+    title : str, optional
+        figure title, if none there will be no title
+        (default: None)
+    legend : bool, optional
+        If True, will provide a legend containing the computed regression equation.
+        (default: True)
+    square : bool, optional
+        If True, set the Axes aspect to "equal" so each cell will be
+        square-shaped. (default: True)
+    color : str, optional
+        Color for mountain plot elements
+    show_hline: bool, optional
+        If set show horizontal lines for iqr
+    show_vlines: bool, optional
+        If set show vertical lines at iqr and median
+    show_markers: bool, optional
+        If set show markers at iqr and median
+    ax : matplotlib.axes.Axes, optional
+        matplotlib axis object, if not passed, uses gca()
 
-        # Build result
-        self._result = {
-            "mountain": mountain,
-            "quantile": quantile,
-            "auc": auc,
-            "iqr": iqr,
-            "mountain_iqr": mountain[iqr_idx, None],
-            "median": quantile[median_idx],
-            "mountain_median": mountain[median_idx],
-        }
+    Returns
+    -------
+    matplotlib.axes.Axes
+        axes object with the Mountain regression plot
+
+    See Also
+    -------
+    mountain.Mountain - class that implements Mountain plot
+
+    References
+    ----------
+    .. [krouwer_1995] Krouwer, Jan S., and Katherine L. Monti.
+                   "A simple, graphical method to evaluate laboratory assays."
+                   European journal of clinical chemistry and clinical biochemistry
+                   33.8 (1995): 525-528.
+    .. [monti_1995] Monti, Katherine L.
+                 "Folded empirical distribution function curves—mountain plots."
+                 The American Statistician 49.4 (1995): 342-345.
+    .. [xue_2011] Xue, Jing-Hao, and D. Michael Titterington.
+               "The p-folded cumulative distribution function and the mean absolute
+               deviation from the p-quantile." Statistics & probability letters
+               81.8 (2011): 1179-1182.
+    """
+    warnings.warn(
+        "methcomp.mountain.mountain is deprecated,"
+        " use methcomp.mountain.Mountain instead",
+        DeprecationWarning,
+    )
+
+    return Mountain(
+        method1=method1,
+        method2=method2,
+        n_percentiles=n_percentiles,
+        iqr=iqr,
+    ).plot(
+        xlabel=xlabel,
+        ylabel=ylabel,
+        label=label,
+        unit=unit,
+        title=title,
+        color=color,
+        legend=legend,
+        square=square,
+        show_hline=show_hline,
+        show_vlines=show_vlines,
+        show_markers=show_markers,
+        ax=ax,
+    )
