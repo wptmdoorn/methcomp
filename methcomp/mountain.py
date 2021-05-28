@@ -284,6 +284,9 @@ def mountain(
     This is an Axis-level function which will draw the Deming plot
     onto the current active Axis object unless ``ax`` is provided.
 
+    NOTE: This function is deprecated and remain for API backwards
+    compatibility reasons. Prefer to use: mountain.Mountain
+
     Parameters
     ----------
     method1 : Union[List[float], np.ndarray]
