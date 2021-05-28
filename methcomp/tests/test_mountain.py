@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import pytest
 
-from methcomp.mountain import Mountain
+from methcomp.mountain import Mountain, mountain
 
 
 @pytest.fixture
@@ -64,6 +64,14 @@ def test_mountain_median(method1, method2):
     median = -0.04
     m = Mountain(method1, method2)
     assert m.result["median"] == pytest.approx(median, rel=1e-2, abs=1e-2)
+
+
+@pytest.mark.mpl_image_compare(tolerance=10)
+def test_mountain_deprecated(method1, method2):
+    fig, ax = plt.subplots(1, 1)
+    with pytest.deprecated_call():
+        mountain(method1, method2, ax=ax)
+    return fig
 
 
 def test_mountain_auc(method1, method2):
