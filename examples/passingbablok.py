@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 
-from methcomp import passingbablok
+from methcomp import PassingBablok, passingbablok
 
 method1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 method2 = [
@@ -26,6 +26,29 @@ method2 = [
     19.13,
     19.54,
 ]
+CI = 0.95
 
-passingbablok(method1, method2, CI=0.95)
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+
+# Legacy method
+passingbablok(
+    method1,
+    method2,
+    CI=CI,
+    ax=axs[0],
+    square=True,
+    x_label="$M_1$",
+    y_label="$M_2$",
+    title="Passing-Bablok: Legacy",
+)
+
+# Regressor method - preferred approach
+PassingBablok(method1, method2, CI=CI).plot(
+    ax=axs[1],
+    square=True,
+    x_label="$M_1$",
+    y_label="$M_2$",
+    title="Passing-Bablok: Regressor",
+)
+
 plt.show()

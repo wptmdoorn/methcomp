@@ -195,6 +195,21 @@ class PassingBablok(Regressor):
         Each of these contain
             `value`, `ci_low`, `ci_high`, and `SE`
 
+    Examples
+    --------
+
+    Minimal example: Compare 2 methods with PassingBablok regression
+
+    >>> import matplotlib.pyplot as plt
+    >>> from methcomp import PassingBablok
+    >>> method1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+    >>>    18, 19, 20]
+    >>> method2 = [1.03, 2.05, 2.79, 3.67, 5.00, 5.82, 7.16, 7.69, 8.53, 10.38,
+    >>>    11.11, 12.17, 13.47, 13.83, 15.15, 16.12, 16.94, 18.09, 19.13, 19.54]
+    >>> PassingBablok(method1, method2).plot()
+    >>> plt.show()
+
+
     References
     ----------
     .. [passing_1983] Passing, H. and W. Bablok W.
@@ -287,6 +302,20 @@ class Deming(Regressor):
     vr : float
         The assumed known ratio of the (residual) variance of the ys relative
         to that of the xs.
+
+    Examples
+    --------
+
+    Minimal example: Compare two methods with Deming regression
+
+    >>> import matplotlib.pyplot as plt
+    >>> from methcomp import Deming
+    >>> method1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+    >>>    18, 19, 20]
+    >>> method2 = [1.03, 2.05, 2.79, 3.67, 5.00, 5.82, 7.16, 7.69, 8.53, 10.38,
+    >>>    11.11, 12.17, 13.47, 13.83, 15.15, 16.12, 16.94, 18.09, 19.13, 19.54]
+    >>> Deming(method1, method2).plot()
+    >>> plt.show()
 
 
     References
@@ -443,6 +472,20 @@ class Linear(Regressor):
             `pvalue`, `rvalue`, `std_err`, `intercept_stderr`
         and `t-score` for confidence interval estimation
 
+
+    Examples
+    --------
+
+    Minimal example: Compare two methods with Linear regression
+
+    >>> import matplotlib.pyplot as plt
+    >>> from methcomp import Linear
+    >>> method1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+    >>>    18, 19, 20]
+    >>> method2 = [1.03, 2.05, 2.79, 3.67, 5.00, 5.82, 7.16, 7.69, 8.53, 10.38,
+    >>>    11.11, 12.17, 13.47, 13.83, 15.15, 16.12, 16.94, 18.09, 19.13, 19.54]
+    >>> Linear(method1, method2).plot()
+    >>> plt.show()
     """
 
     def __init__(
