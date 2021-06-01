@@ -7,14 +7,16 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import numpy as np
 
+from .comparer import Comparer
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from scipy.stats import norm, t
 
-__all__ = ["blandaltman"]
+__all__ = ["blandaltman", "BlandAltman"]
 
 
-class BlandAltman:
+class BlandAltman(Comparer):
     """Class for drawing a Bland-Altman plot"""
 
     DEFAULT_POINTS_KWS = {"s": 20, "alpha": 0.6, "color": "#000000"}
@@ -23,9 +25,9 @@ class BlandAltman:
         self,
         method1: Union[List[float], np.ndarray],
         method2: Union[List[float], np.ndarray],
-        diff: str,
-        limit_of_agreement: float,
-        CI: float,
+        diff: str = "absolute",
+        limit_of_agreement: float = 1.96,
+        CI: float = 0.95,
     ):
         """
         Initialize a Bland-Altman class object. This class is center to the calculate
@@ -48,16 +50,29 @@ class BlandAltman:
 
         # variables assignment
         self.computed = False
-        self.method1: np.array = np.asarray(method1)
-        self.method2: np.array = np.asarray(method2)
         self.diff_method: str = diff
         self.CI: float = CI
         self.loa: float = limit_of_agreement
+        super().__init__(method1, method2)
 
-        # check provided parameters
-        self._check_params()
+    def _check_params(self):
+        super()._check_params()
 
-    def compute(self) -> Dict[str, Any]:
+        if len(self.method1) != len(self.method2):
+            raise ValueError("Length of method 1 and method 2 are not equal.")
+
+        if self.CI is not None and (self.CI > 1 or self.CI < 0):
+            raise ValueError("Confidence interval must be between 0 and 1.")
+
+        if self.diff_method not in ["absolute", "percentage"]:
+            raise ValueError(
+                "The provided difference method must be either absolute or percentage."
+            )
+
+        # if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
+        #    raise ValueError('Axes labels arguments should be provided as a str.')
+
+    def _calculate_impl(self) -> Dict[str, Any]:
         """Calculates the statistics for method comparison using
         Bland-Altman plotting. Returns a dictionary with the results.
 
@@ -72,7 +87,6 @@ class BlandAltman:
             values and their confidence intervals
         """
 
-        self.n: float = len(self.method1)
         self.mean: np.array = np.mean([self.method1, self.method2], axis=0)
 
         self.diff = self.method1 - self.method2
@@ -98,7 +112,7 @@ class BlandAltman:
                 self.mean_diff - self.loa_sd - conf_loa,
             ]
 
-        self._output = {
+        self._result = {
             "mean": self.mean_diff,
             "mean_CI": self.CI_mean if self.CI else None,
             "loa_lower": self.mean_diff - self.loa_sd,
@@ -106,25 +120,6 @@ class BlandAltman:
             "loa_upper": self.mean_diff + self.loa_sd,
             "loa_upper_CI": self.CI_upper if self.CI else None,
         }
-
-        self.computed = True
-
-        return self._output
-
-    def _check_params(self):
-        if len(self.method1) != len(self.method2):
-            raise ValueError("Length of method 1 and method 2 are not equal.")
-
-        if self.CI is not None and (self.CI > 1 or self.CI < 0):
-            raise ValueError("Confidence interval must be between 0 and 1.")
-
-        if self.diff_method not in ["absolute", "percentage"]:
-            raise ValueError(
-                "The provided difference method must be either absolute or percentage."
-            )
-
-        # if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
-        #    raise ValueError('Axes labels arguments should be provided as a str.')
 
     def plot(
         self,
@@ -173,26 +168,28 @@ class BlandAltman:
         ax : matplotlib Axes, optional
             Axes in which to draw the plot, otherwise use the currently-active
             Axes.
+
         Returns
         -------
         ax : matplotlib Axes
             Axes object with the Bland-Altman plot.
         """
 
-        if not (self.computed):
-            self.compute()
+        ax = ax or plt.gca()
 
         pkws = self.DEFAULT_POINTS_KWS.copy()
         pkws.update(point_kws or {})
-        ax = ax or plt.gca()
+
+        # Get parameters
+        mean, mean_ci = self.result["mean"], self.result["mean_CI"]
 
         # individual points
         ax.scatter(self.mean, self.diff, **pkws)
 
         # mean difference and SD lines
-        ax.axhline(self.mean_diff, color=color_mean, linestyle="-")
-        ax.axhline(self.mean_diff + self.loa_sd, color=color_loa, linestyle="--")
-        ax.axhline(self.mean_diff - self.loa_sd, color=color_loa, linestyle="--")
+        ax.axhline(mean, color=color_mean, linestyle="-")
+        ax.axhline(mean + self.loa_sd, color=color_loa, linestyle="--")
+        ax.axhline(mean - self.loa_sd, color=color_loa, linestyle="--")
 
         if reference:
             ax.axhline(0, color="grey", linestyle="-", alpha=0.4)
@@ -274,7 +271,22 @@ class BlandAltman:
 
 
 def blandaltman(
-    method1, method2, diff="absolute", limit_of_agreement=1.96, CI=0.95
+    method1,
+    method2,
+    diff="absolute",
+    limit_of_agreement=1.96,
+    CI=0.95,
+    x_label: str = "Mean of methods",
+    y_label: str = "Difference between methods",
+    graph_title: str = None,
+    reference: bool = False,
+    xlim: Tuple = None,
+    ylim: Tuple = None,
+    color_mean: str = "#008bff",
+    color_loa: str = "#FF7000",
+    color_points: str = "#000000",
+    point_kws: Dict = None,
+    ax: matplotlib.axes.Axes = None,
 ) -> BlandAltman:
     """Provide a method comparison using Bland-Altman.
 
@@ -312,4 +324,16 @@ def blandaltman(
 
     """
 
-    return BlandAltman(method1, method2, diff, limit_of_agreement, CI)
+    return BlandAltman(method1, method2, diff, limit_of_agreement, CI).plot(
+        x_label=x_label,
+        y_label=y_label,
+        graph_title=graph_title,
+        reference=reference,
+        xlim=xlim,
+        ylim=ylim,
+        color_mean=color_mean,
+        color_loa=color_loa,
+        color_points=color_points,
+        point_kws=point_kws,
+        ax=ax,
+    )
