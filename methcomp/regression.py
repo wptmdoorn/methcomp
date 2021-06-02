@@ -186,19 +186,6 @@ def passingbablok(
     matplotlib.axes.Axes
         axes object with the Passing-Bablok regression plot
 
-    References
-    ----------
-    .. [passing_1983] Passing, H. and W. Bablok W.
-                      "A New Biometrical Procedure for Testing the Equality of
-                      Measurements from Two Different Analytical Methods."
-                      J. Clin. Chem. Clin. Biochem 21 (1983): 709-720.
-    .. [passing_1988] Bablok, W., et al. "A General Regression Procedure for
-                      Method Transformation. Application of Linear Regression
-                      Procedures for Method Comparison Studies in Clinical
-                      Chemistry, Part III." Journal of clinical chemistry
-                      and clinical biochemistry. Zeitschrift fur klinische
-                      Chemie und klinische Biochemie 26.11 (1988): 783-790.
-
     See Also
     -------
     regressor.PassingBablok - class that implements Passing-Bablok regression and plot
