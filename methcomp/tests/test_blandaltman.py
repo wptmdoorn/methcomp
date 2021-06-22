@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from methcomp import blandaltman
+from methcomp import BlandAltman
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def method2():
 def test_blandaltman_compute(
     method1, method2, CI, m, mlo, mhi, l_, llo, lhi, h, hlo, hhi
 ):
-    results = blandaltman(method1, method2, CI=CI).compute()
+    results = BlandAltman(method1, method2, CI=CI).calculate()
     # Expected
     np.testing.assert_allclose(results["mean"], m, rtol=1e-5)
     np.testing.assert_allclose(results["mean_CI"], (mlo, mhi), rtol=1e-5)
@@ -66,26 +66,26 @@ def test_blandaltman_compute(
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2).plot(ax=ax)
+    BlandAltman(method1, method2).plot(ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic_title(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2).plot(graph_title="Test", ax=ax)
+    BlandAltman(method1, method2).plot(graph_title="Test", ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic_without_CI(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2, CI=None).plot(ax=ax)
+    BlandAltman(method1, method2, CI=None).plot(ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare(tolerance=10)
 def test_blandaltman_basic_percentage(method1, method2):
     fig, ax = plt.subplots(1, 1)
-    blandaltman(method1, method2, diff="percentage").plot(ax=ax)
+    BlandAltman(method1, method2, diff="percentage").plot(ax=ax)
     return fig
