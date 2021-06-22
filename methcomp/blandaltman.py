@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -72,7 +72,7 @@ class BlandAltman(Comparer):
         # if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
         #    raise ValueError('Axes labels arguments should be provided as a str.')
 
-    def _calculate_impl(self) -> Dict[str, Any]:
+    def _calculate_impl(self):
         """Calculates the statistics for method comparison using
         Bland-Altman plotting. Returns a dictionary with the results.
 
@@ -119,6 +119,7 @@ class BlandAltman(Comparer):
             "loa_lower_CI": self.CI_lower if self.CI else None,
             "loa_upper": self.mean_diff + self.loa_sd,
             "loa_upper_CI": self.CI_upper if self.CI else None,
+            "sd_diff": self.sd_diff,
         }
 
     def plot(
@@ -181,33 +182,36 @@ class BlandAltman(Comparer):
         pkws.update(point_kws or {})
 
         # Get parameters
-        mean, mean_ci = self.result["mean"], self.result["mean_CI"]
+        mean, mean_CI = self.result["mean"], self.result["mean_CI"]
+        loa_upper, loa_upper_CI = self.result["loa_upper"], self.result["loa_upper_CI"]
+        loa_lower, loa_lower_CI = self.result["loa_lower"], self.result["loa_lower_CI"]
+        sd_diff = self.result["sd_diff"]
 
         # individual points
         ax.scatter(self.mean, self.diff, **pkws)
 
         # mean difference and SD lines
         ax.axhline(mean, color=color_mean, linestyle="-")
-        ax.axhline(mean + self.loa_sd, color=color_loa, linestyle="--")
-        ax.axhline(mean - self.loa_sd, color=color_loa, linestyle="--")
+        ax.axhline(loa_upper, color=color_loa, linestyle="--")
+        ax.axhline(loa_lower, color=color_loa, linestyle="--")
 
         if reference:
             ax.axhline(0, color="grey", linestyle="-", alpha=0.4)
 
         # confidence intervals (if requested)
         if self.CI is not None:
-            ax.axhspan(self.CI_mean[0], self.CI_mean[1], color=color_mean, alpha=0.2)
-            ax.axhspan(self.CI_upper[0], self.CI_upper[1], color=color_loa, alpha=0.2)
-            ax.axhspan(self.CI_lower[0], self.CI_lower[1], color=color_loa, alpha=0.2)
+            ax.axhspan(*mean_CI, color=color_mean, alpha=0.2)
+            ax.axhspan(*loa_upper_CI, color=color_loa, alpha=0.2)
+            ax.axhspan(*loa_lower_CI, color=color_loa, alpha=0.2)
 
         # text in graph
         trans: matplotlib.transform = transforms.blended_transform_factory(
             ax.transAxes, ax.transData
         )
-        offset: float = (((self.loa * self.sd_diff) * 2) / 100) * 1.2
+        offset: float = (((self.loa * sd_diff) * 2) / 100) * 1.2
         ax.text(
             0.98,
-            self.mean_diff + offset,
+            mean + offset,
             "Mean",
             ha="right",
             va="bottom",
@@ -215,15 +219,15 @@ class BlandAltman(Comparer):
         )
         ax.text(
             0.98,
-            self.mean_diff - offset,
-            f"{self.mean_diff:.2f}",
+            mean - offset,
+            f"{mean:.2f}",
             ha="right",
             va="top",
             transform=trans,
         )
         ax.text(
             0.98,
-            self.mean_diff + self.loa_sd + offset,
+            loa_upper + offset,
             f"+{self.loa:.2f} SD",
             ha="right",
             va="bottom",
@@ -231,15 +235,15 @@ class BlandAltman(Comparer):
         )
         ax.text(
             0.98,
-            self.mean_diff + self.loa_sd - offset,
-            f"{self.mean_diff + self.loa_sd:.2f}",
+            loa_upper - offset,
+            f"{loa_upper:.2f}",
             ha="right",
             va="top",
             transform=trans,
         )
         ax.text(
             0.98,
-            self.mean_diff - self.loa_sd - offset,
+            loa_lower - offset,
             f"-{self.loa:.2f} SD",
             ha="right",
             va="top",
@@ -247,8 +251,8 @@ class BlandAltman(Comparer):
         )
         ax.text(
             0.98,
-            self.mean_diff - self.loa_sd + offset,
-            f"{self.mean_diff - self.loa_sd:.2f}",
+            loa_lower + offset,
+            f"{loa_lower:.2f}",
             ha="right",
             va="bottom",
             transform=trans,

@@ -2,7 +2,7 @@
 import matplotlib as mpl
 
 # Import functions from all modules
-from .blandaltman import blandaltman, BlandAltman
+from .blandaltman import BlandAltman, blandaltman
 from .glucose import clarke, clarkezones, parkes, parkeszones, seg, segscores
 from .regression import deming, linear, passingbablok
 from .regressor import Deming, Linear, PassingBablok
