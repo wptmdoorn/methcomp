@@ -69,9 +69,6 @@ class BlandAltman(Comparer):
                 "The provided difference method must be either absolute or percentage."
             )
 
-        # if any([not isinstance(x, str) for x in [self.x_title, self.y_title]]):
-        #    raise ValueError('Axes labels arguments should be provided as a str.')
-
     def _calculate_impl(self):
         """Calculates the statistics for method comparison using
         Bland-Altman plotting. Returns a dictionary with the results.
@@ -134,6 +131,8 @@ class BlandAltman(Comparer):
         color_loa: str = "#FF7000",
         color_points: str = "#000000",
         point_kws: Dict = None,
+        ci_alpha: float = 0.2,
+        loa_linestyle: str = "--",
         ax: matplotlib.axes.Axes = None,
     ):
         """Provide a method comparison using Bland-Altman plotting.
@@ -166,6 +165,10 @@ class BlandAltman(Comparer):
             Color of the individual differences that will be plotted.
         point_kws : dict of key, value mappings, optional
             Additional keyword arguments for `plt.scatter`.
+        ci_alpha: float, optional
+            Alpha value of the confidence interval.
+        loa_linestyle: str, optional
+            Linestyle of the limit of agreement lines.
         ax : matplotlib Axes, optional
             Axes in which to draw the plot, otherwise use the currently-active
             Axes.
@@ -191,18 +194,18 @@ class BlandAltman(Comparer):
         ax.scatter(self.mean, self.diff, **pkws)
 
         # mean difference and SD lines
-        ax.axhline(mean, color=color_mean, linestyle="-")
-        ax.axhline(loa_upper, color=color_loa, linestyle="--")
-        ax.axhline(loa_lower, color=color_loa, linestyle="--")
+        ax.axhline(mean, color=color_mean, linestyle=loa_linestyle)
+        ax.axhline(loa_upper, color=color_loa, linestyle=loa_linestyle)
+        ax.axhline(loa_lower, color=color_loa, linestyle=loa_linestyle)
 
         if reference:
             ax.axhline(0, color="grey", linestyle="-", alpha=0.4)
 
         # confidence intervals (if requested)
         if self.CI is not None:
-            ax.axhspan(*mean_CI, color=color_mean, alpha=0.2)
-            ax.axhspan(*loa_upper_CI, color=color_loa, alpha=0.2)
-            ax.axhspan(*loa_lower_CI, color=color_loa, alpha=0.2)
+            ax.axhspan(*mean_CI, color=color_mean, alpha=ci_alpha)
+            ax.axhspan(*loa_upper_CI, color=color_loa, alpha=ci_alpha)
+            ax.axhspan(*loa_lower_CI, color=color_loa, alpha=ci_alpha)
 
         # text in graph
         trans: matplotlib.transform = transforms.blended_transform_factory(
@@ -290,6 +293,8 @@ def blandaltman(
     color_loa: str = "#FF7000",
     color_points: str = "#000000",
     point_kws: Dict = None,
+    ci_alpha: float = 0.2,
+    loa_linestyle: str = "--",
     ax: matplotlib.axes.Axes = None,
 ) -> BlandAltman:
     """Provide a method comparison using Bland-Altman.
@@ -339,5 +344,7 @@ def blandaltman(
         color_loa=color_loa,
         color_points=color_points,
         point_kws=point_kws,
+        ci_alpha=ci_alpha,
+        loa_linestyle=loa_linestyle,
         ax=ax,
     )
