@@ -11,7 +11,7 @@ methcomp: method comparison for clinical chemistry
 
 [![PyPI Version](https://img.shields.io/badge/pypi-v1.0.0-blue)](https://pypi.org/project/methcomp/)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](https://github.com/wptmdoorn/methcomp/blob/master/LICENSE)
-[![Build Status](https://travis-ci.org/wptmdoorn/methcomp.svg?branch=master)](https://travis-ci.org/wptmdoorn/methcomp)
+[![Build Status](https://travis-ci.com/wptmdoorn/methcomp.svg?branch=master)](https://travis-ci.com/wptmdoorn/methcomp)
 [![Code Coverage](https://codecov.io/gh/wptmdoorn/methcomp/branch/master/graph/badge.svg)](https://codecov.io/gh/wptmdoorn/methcomp)
 
 Methcomp is a Python visualization library based
