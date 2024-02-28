@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Optional, Sequence, Tuple, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -23,8 +23,8 @@ class BlandAltman(Comparer):
 
     def __init__(
         self,
-        method1: Union[List[float], np.ndarray],
-        method2: Union[List[float], np.ndarray],
+        method1: Union[Sequence[float], np.ndarray],
+        method2: Union[Sequence[float], np.ndarray],
         diff: str = "absolute",
         limit_of_agreement: float = 1.96,
         CI: float = 0.95,
@@ -84,7 +84,9 @@ class BlandAltman(Comparer):
             values and their confidence intervals
         """
 
-        self.mean: np.array = np.mean([self.method1, self.method2], axis=0)
+        self.mean: np.array = np.mean(
+            [self.method1, self.method2], axis=0
+        )  # type: ignore
 
         self.diff = self.method1 - self.method2
         if self.diff_method == "percentage":
@@ -96,9 +98,11 @@ class BlandAltman(Comparer):
 
         if self.CI is not None:
             self.CI_mean = norm.interval(
-                alpha=self.CI, loc=self.mean_diff, scale=self.sd_diff / np.sqrt(self.n)
+                confidence=self.CI,
+                loc=self.mean_diff,
+                scale=self.sd_diff / np.sqrt(self.n),
             )
-            se_loa = (1.71 ** 2) * ((self.sd_diff ** 2) / self.n)
+            se_loa = (1.71**2) * ((self.sd_diff**2) / self.n)
             conf_loa = np.sqrt(se_loa) * t.ppf(q=(1 - self.CI) / 2.0, df=self.n - 1)
             self.CI_upper = [
                 self.mean_diff + self.loa_sd + conf_loa,
@@ -123,17 +127,17 @@ class BlandAltman(Comparer):
         self,
         x_label: str = "Mean of methods",
         y_label: str = "Difference between methods",
-        graph_title: str = None,
+        graph_title: Optional[str] = None,
         reference: bool = False,
-        xlim: Tuple = None,
-        ylim: Tuple = None,
+        xlim: Optional[Tuple] = None,
+        ylim: Optional[Tuple] = None,
         color_mean: str = "#008bff",
         color_loa: str = "#FF7000",
         color_points: str = "#000000",
-        point_kws: Dict = None,
+        point_kws: Optional[Dict] = None,
         ci_alpha: float = 0.2,
         loa_linestyle: str = "--",
-        ax: matplotlib.axes.Axes = None,
+        ax: Optional[matplotlib.axes.Axes] = None,
     ):
         """Provide a method comparison using Bland-Altman plotting.
         This is an Axis-level function which will draw the Bland-Altman plot
@@ -191,7 +195,7 @@ class BlandAltman(Comparer):
         sd_diff = self.result["sd_diff"]
 
         # individual points
-        ax.scatter(self.mean, self.diff, **pkws)
+        ax.scatter(self.mean, self.diff, **pkws)  # type: ignore
 
         # mean difference and SD lines
         ax.axhline(mean, color=color_mean, linestyle=loa_linestyle)
@@ -208,7 +212,7 @@ class BlandAltman(Comparer):
             ax.axhspan(*loa_lower_CI, color=color_loa, alpha=ci_alpha)
 
         # text in graph
-        trans: matplotlib.transform = transforms.blended_transform_factory(
+        trans: matplotlib.transforms.Transform = transforms.blended_transform_factory(
             ax.transAxes, ax.transData
         )
         offset: float = (((self.loa * sd_diff) * 2) / 100) * 1.2
@@ -285,17 +289,17 @@ def blandaltman(
     CI=0.95,
     x_label: str = "Mean of methods",
     y_label: str = "Difference between methods",
-    graph_title: str = None,
+    graph_title: Optional[str] = None,
     reference: bool = False,
-    xlim: Tuple = None,
-    ylim: Tuple = None,
+    xlim: Optional[Tuple] = None,
+    ylim: Optional[Tuple] = None,
     color_mean: str = "#008bff",
     color_loa: str = "#FF7000",
     color_points: str = "#000000",
-    point_kws: Dict = None,
+    point_kws: Optional[Dict] = None,
     ci_alpha: float = 0.2,
     loa_linestyle: str = "--",
-    ax: matplotlib.axes.Axes = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
 ) -> BlandAltman:
     """Provide a method comparison using Bland-Altman.
 

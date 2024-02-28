@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence, Union
 
 import matplotlib
 import numpy as np
@@ -10,20 +10,20 @@ from .regressor import Deming, Linear, PassingBablok
 
 
 def deming(
-    method1: np.ndarray,
-    method2: np.ndarray,
+    method1: Union[Sequence[float], np.ndarray],
+    method2: Union[Sequence[float], np.ndarray],
     CI: float = 0.95,
-    vr: float = None,
-    sdr: float = None,
+    vr: Optional[float] = None,
+    sdr: Optional[float] = None,
     bootstrap: int = 1000,
     x_label: str = "Method 1",
     y_label: str = "Method 2",
-    title: str = None,
+    title: Optional[str] = None,
     line_reference: bool = True,
     line_CI: bool = True,
     legend: bool = True,
     square: bool = False,
-    ax: matplotlib.axes.Axes = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
     point_kws: Optional[Dict] = None,
     color_regr: Optional[str] = None,
     alpha_regr: Optional[float] = None,
@@ -125,17 +125,17 @@ def deming(
 
 
 def passingbablok(
-    method1: np.ndarray,
-    method2: np.ndarray,
+    method1: Union[Sequence[float], np.ndarray],
+    method2: Union[Sequence[float], np.ndarray],
     CI: float = 0.95,
     x_label: str = "Method 1",
     y_label: str = "Method 2",
-    title: str = None,
+    title: Optional[str] = None,
     line_reference: bool = True,
     line_CI: bool = True,
     legend: bool = True,
     square: bool = False,
-    ax: matplotlib.axes.Axes = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
     point_kws: Optional[Dict] = None,
     color_regr: Optional[str] = None,
     alpha_regr: Optional[float] = None,
@@ -226,17 +226,17 @@ def passingbablok(
 
 
 def linear(
-    method1: np.ndarray,
-    method2: np.ndarray,
+    method1: Union[Sequence[float], np.ndarray],
+    method2: Union[Sequence[float], np.ndarray],
     CI: float = 0.95,
     x_label: str = "Method 1",
     y_label: str = "Method 2",
-    title: str = None,
+    title: Optional[str] = None,
     line_reference: bool = True,
     line_CI: bool = True,
     legend: bool = True,
     square: bool = False,
-    ax: matplotlib.axes.Axes = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
     point_kws: Optional[Dict] = None,
     color_regr: Optional[str] = None,
     alpha_regr: Optional[float] = None,

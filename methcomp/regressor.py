@@ -4,7 +4,7 @@
 """
 import math
 import warnings
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Sequence, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -37,8 +37,8 @@ class Regressor(Comparer):
 
     def __init__(
         self,
-        method1: Union[List[float], np.ndarray],
-        method2: Union[List[float], np.ndarray],
+        method1: Union[Sequence[float], np.ndarray],
+        method2: Union[Sequence[float], np.ndarray],
         CI: float = 0.95,
     ):
         """Construct a regressor.
@@ -72,12 +72,12 @@ class Regressor(Comparer):
         self,
         x_label: str = "Method 1",
         y_label: str = "Method 2",
-        title: str = None,
+        title: Optional[str] = None,
         line_reference: bool = True,
         line_CI: bool = True,
         legend: bool = True,
         square: bool = False,
-        ax: matplotlib.axes.Axes = None,
+        ax: Optional[matplotlib.axes.Axes] = None,
         point_kws: Optional[Dict] = None,
         color_regr: Optional[str] = None,
         alpha_regr: Optional[float] = None,
@@ -130,7 +130,7 @@ class Regressor(Comparer):
         intercept = self.result["intercept"]
 
         # plot individual points
-        ax.scatter(self.method1, self.method2, **pkws)
+        ax.scatter(self.method1, self.method2, **pkws)  # type: ignore
 
         # plot reference line
         if line_reference:
@@ -226,8 +226,8 @@ class PassingBablok(Regressor):
 
     def __init__(
         self,
-        method1: Union[List[float], np.ndarray],
-        method2: Union[List[float], np.ndarray],
+        method1: Union[Sequence[float], np.ndarray],
+        method2: Union[Sequence[float], np.ndarray],
         CI: float = 0.95,
     ):
         """Construct a Passing-Bablok Regressor
@@ -330,11 +330,11 @@ class Deming(Regressor):
 
     def __init__(
         self,
-        method1: Union[List[float], np.ndarray],
-        method2: Union[List[float], np.ndarray],
+        method1: Union[Sequence[float], np.ndarray],
+        method2: Union[Sequence[float], np.ndarray],
         CI: float = 0.95,
-        vr: float = None,
-        sdr: float = None,
+        vr: Optional[float] = None,
+        sdr: Optional[float] = None,
         bootstrap: int = 1000,
     ):
         """Construct a Deming Regressor
@@ -490,8 +490,8 @@ class Linear(Regressor):
 
     def __init__(
         self,
-        method1: Union[List[float], np.ndarray],
-        method2: Union[List[float], np.ndarray],
+        method1: Union[Sequence[float], np.ndarray],
+        method2: Union[Sequence[float], np.ndarray],
         CI: float = 0.95,
     ):
         """Construct a Linear regressor

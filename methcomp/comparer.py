@@ -3,7 +3,7 @@
 """Abstract comparer base class
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Sequence, Union
 
 import numpy as np
 
@@ -14,8 +14,8 @@ class Comparer(ABC):
 
     def __init__(
         self,
-        method1: Union[List[float], np.ndarray],
-        method2: Union[List[float], np.ndarray],
+        method1: Union[Sequence[float], np.ndarray],
+        method2: Union[Sequence[float], np.ndarray],
     ):
         """Build comparer
 

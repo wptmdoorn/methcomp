@@ -3,7 +3,7 @@
 """Mountain plot.
 """
 import warnings
-from typing import List, Union
+from typing import Optional, Sequence, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -77,8 +77,8 @@ class Mountain(Comparer):
 
     def __init__(
         self,
-        method1: Union[List[float], np.ndarray],
-        method2: Union[List[float], np.ndarray],
+        method1: Union[Sequence[float], np.ndarray],
+        method2: Union[Sequence[float], np.ndarray],
         n_percentiles: int = 100,
         iqr: float = 68.27,
     ):
@@ -150,15 +150,15 @@ class Mountain(Comparer):
         xlabel: str = "Method difference",
         ylabel: str = "Folded CDF (%)",
         label: str = "$M_1$ - $M_2$",
-        unit: str = None,
-        title: str = None,
+        unit: Optional[str] = None,
+        title: Optional[str] = None,
         color: str = "blue",
         legend: bool = True,
         square: bool = False,
         show_hline: bool = True,
         show_vlines: bool = True,
         show_markers: bool = True,
-        ax: matplotlib.axes.Axes = None,
+        ax: Optional[matplotlib.axes.Axes] = None,
     ) -> matplotlib.axes.Axes:
         """Plot mountain plot
 
@@ -262,22 +262,22 @@ class Mountain(Comparer):
 
 
 def mountain(
-    method1: Union[List[float], np.ndarray],
-    method2: Union[List[float], np.ndarray],
+    method1: Union[Sequence[float], np.ndarray],
+    method2: Union[Sequence[float], np.ndarray],
     n_percentiles: int = 100,
     iqr: float = 68.27,
     xlabel: str = "Method difference",
     ylabel: str = "Folded CDF (%)",
     label: str = "$M_1$ - $M_2$",
-    unit: str = None,
-    title: str = None,
+    unit: Optional[str] = None,
+    title: Optional[str] = None,
     color: str = "blue",
     legend: bool = True,
     square: bool = False,
     show_hline: bool = True,
     show_vlines: bool = True,
     show_markers: bool = True,
-    ax: matplotlib.axes.Axes = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
 ):
     """Provide a method comparison using Mountain plot.
 
