@@ -68,4 +68,7 @@ if __name__ == "__main__":
         packages=PACKAGES,
         classifiers=CLASSIFIERS,
         include_package_data=True,
+        package_data={
+            'methcomp': ['static/*'],  # Include all files in the static folder
+        },
     )

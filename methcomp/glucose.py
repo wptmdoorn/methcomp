@@ -1226,6 +1226,7 @@ class _SEG(object):
         reference,
         test,
         units,
+        file_name,
         x_title,
         y_title,
         graph_title,
@@ -1238,6 +1239,7 @@ class _SEG(object):
         self.reference: np.array = np.asarray(reference)
         self.test: np.array = np.asarray(test)
         self.units = units
+        self.file_name = file_name
         self.graph_title: str = graph_title
         self.x_title: str = x_title
         self.y_title: str = y_title
@@ -1284,7 +1286,7 @@ class _SEG(object):
         _zones = []
         from . import static  # temporary fix
 
-        data = np.loadtxt(pkg_resources.open_text(static, "seg.csv"))
+        data = np.loadtxt(pkg_resources.open_text(static, self.file_name))
         _zones = np.array([data.T[int(p), int(t)] for p, t in zip(pred, ref)])
 
         return _zones
@@ -1424,6 +1426,7 @@ def seg(
     reference,
     test,
     units,
+    file_name,
     x_label=None,
     y_label=None,
     title=None,
@@ -1489,6 +1492,7 @@ def seg(
         reference,
         test,
         units,
+        file_name,
         x_label,
         y_label,
         title,
@@ -1510,7 +1514,7 @@ def seg(
     return ax
 
 
-def segscores(reference, test, units):
+def segscores(reference, test, units, file_name="seg.csv"):
     """Provides the raw error values as depicted by the
     surveillance error grid analysis for each point in the reference and test datasets.
 
@@ -1534,7 +1538,7 @@ def segscores(reference, test, units):
 
     # obtain zones from a Clarke reference object
     _zones = _SEG(
-        reference, test, units, None, None, None, None, None, None, None
+        reference, test, units, file_name, None, None, None, None, None, None, None
     )._calc_error_score()
 
     return _zones
